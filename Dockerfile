@@ -12,6 +12,6 @@ RUN ./configure --without-subversion --without-liblua --without-zenmap \
   --without-openssl 
 RUN make
 
-FROM ubuntu:18.04
+FROM alpine
 COPY --from=TEMP /app/nmap /nmap
 CMD [ "/nmap" ]
