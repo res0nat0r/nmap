@@ -10,9 +10,12 @@ blocks:
       jobs:
       - name: configure
         commands:
+          - checkout
+
           - echo "run ./configure ..."
           - ./configure
           - echo "done"
+
       - name: make
         commands:
           - echo "running make ..."
@@ -51,6 +54,7 @@ blocks:
 #    task:
 #      jobs:
 #      - name: Push
-#        commands:
+#        c
+        1Gommands:
 #          - checkout
 #          - echo "make docker.push"
