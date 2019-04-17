@@ -12,8 +12,4 @@ blocks:
         commands:
           - checkout
           - ./configure
-
-      - name: make
-        commands:
-          - checkout
           - make
