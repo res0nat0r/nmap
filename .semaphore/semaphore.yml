@@ -11,13 +11,9 @@ blocks:
       - name: configure
         commands:
           - checkout
-
-          - echo "run ./configure ..."
           - ./configure
-          - echo "done"
 
       - name: make
         commands:
-          - echo "running make ..."
+          - checkout
           - make
-          - echo "done"
