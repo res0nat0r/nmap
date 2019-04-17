@@ -5,10 +5,10 @@ agent:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-  - name: configure and make
+  - name: build
     task:
       jobs:
-      - name: configure
+      - name: ./configure && make
         commands:
           - checkout
           - ./configure
