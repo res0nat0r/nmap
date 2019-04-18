@@ -1,3 +1,10 @@
+version: v1.0
+name: nmap-pipeline
+agent:
+  machine:
+    type: e1-standard-1
+    os_image: ubuntu1804
+
 blocks:
   - name: "Build matrix"
     task:
