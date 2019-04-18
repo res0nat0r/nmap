@@ -2,14 +2,14 @@ version: v1.0
 name: nmap-pipeline
 agent:
   machine:
-    type: e1-standard-2
+    type: e1-standard-1
     os_image: ubuntu1804
 blocks:
-  - name: build
-    task:
-      jobs:
-      - name: ./configure && make
-        commands:
-          - checkout
-          - ./configure
-          - make
+  - name: matrix
+    matrix:
+      - env_var: FOO
+        values: [ "A", "B", "C" ]
+      - env_var: BAR
+        values: [ "B", "A", "R" ]
+    commands:
+      - echo FOO=$FOO BAR=$BAR
