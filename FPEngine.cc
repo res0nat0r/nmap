@@ -6,7 +6,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -140,6 +140,7 @@
 #include "linear.h"
 #include "FPModel.h"
 #include "tcpip.h"
+#include "string_pool.h"
 extern NmapOps o;
 #ifdef WIN32
 /* Need DnetName2PcapName */
@@ -206,7 +207,7 @@ void FPNetworkControl::init(const char *ifname, devtype iftype) {
   if ((this->nsp = nsock_pool_new(NULL)) == NULL)
     fatal("Unable to obtain an Nsock pool");
 
-  nsock_set_log_function(nmap_nsock_stderr_logger);
+  nmap_set_nsock_logger();
   nmap_adjust_loglevel(o.packetTrace());
 
   nsock_pool_set_device(nsp, o.device);
@@ -706,8 +707,6 @@ const char *FPEngine::bpf_filter(std::vector<Target *> &Targets) {
         fatal("ran out of space in dst_hosts");
       filterlen += len;
     }
-    if (len < 0 || len + filterlen >= (int) sizeof(dst_hosts))
-      fatal("ran out of space in dst_hosts");
 
     len = Snprintf(pcap_filter, sizeof(pcap_filter), "dst host %s and (%s)",
                    Targets[0]->sourceipstr(), dst_hosts);

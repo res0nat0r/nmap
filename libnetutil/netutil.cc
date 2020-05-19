@@ -4,7 +4,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -137,9 +137,7 @@
 
 #include "nbase.h"
 
-#ifdef WIN32
-#include "mswin32/winclude.h"
-#else
+#ifndef WIN32
 #include <sys/uio.h>
 #include <sys/ioctl.h>
 #endif
@@ -173,6 +171,11 @@
 # endif
 #endif /* Solaris */
 
+#ifdef WIN32
+typedef unsigned __int32 u_int32_t;
+typedef unsigned __int16 u_int16_t;
+typedef unsigned __int8 u_int8_t;
+#endif
 
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
@@ -952,7 +955,7 @@ int my_pcap_get_selectable_fd(pcap_t *p) {
    fd is selectable? If not, it's possible for the fd to become selectable, then
    for pcap_dispatch to buffer two or more frames, and return only the first one
    Because select doesn't know about pcap's buffer, the fd does not become
-   selectable again, even though another pcap_next would succeed. On these
+   selectable again, even though another pcap_next_ex would succeed. On these
    platforms, we must do a non-blocking read from the fd before doing a select
    on the fd.
 
@@ -1867,190 +1870,162 @@ char *nexthdrtoa(u8 nextheader, int acronym){
 static char buffer[129];
 memset(buffer, 0, 129);
 
+#define HDRTOA(num, short_name, long_name) \
+  case num: \
+    strncpy(buffer, acronym ? short_name : long_name, 128);\
+    break;
 
 switch(nextheader){
-
-    case 0:
-        if(acronym)
-            strncpy(buffer, "HOPOPT", 128);
-        else
-            strncpy(buffer, "IPv6 Hop-by-Hop Option", 128);
-    break;
-
-
-    case 1:
-        if(acronym)
-            strncpy(buffer, "ICMP", 128);
-        else
-            strncpy(buffer, "Internet Control Message", 128);
-    break;
-
-
-    case 2:
-        if(acronym)
-            strncpy(buffer, "IGMP", 128);
-        else
-            strncpy(buffer, "Internet Group Management", 128);
-    break;
-
-
-    case 4:
-        if(acronym)
-            strncpy(buffer, "IP", 128);
-        else
-            strncpy(buffer, "IP in IP (encapsulation)", 128);
-    break;
-
-
-    case 6:
-        if(acronym)
-            strncpy(buffer, "TCP", 128);
-        else
-            strncpy(buffer, "Transmission Control Protocol", 128);
-    break;
-
-
-    case 8:
-        if(acronym)
-            strncpy(buffer, "EGP", 128);
-        else
-            strncpy(buffer, "Exterior Gateway Protocol", 128);
-    break;
-
-
-    case 9:
-        if(acronym)
-            strncpy(buffer, "IGP", 128);
-        else
-            strncpy(buffer, "Interior Gateway Protocol", 128);
-    break;
-
-
-    case 17:
-        if(acronym)
-            strncpy(buffer, "UDP", 128);
-        else
-            strncpy(buffer, "User Datagram", 128);
-    break;
-
-
-    case 41:
-        if(acronym)
-            strncpy(buffer, "IPv6", 128);
-        else
-            strncpy(buffer, "Internet Protocol version 6", 128);
-    break;
-
-
-    case 43:
-        if(acronym)
-            strncpy(buffer, "IPv6-Route", 128);
-        else
-            strncpy(buffer, "Routing Header for IPv6", 128);
-    break;
-
-
-    case 44:
-        if(acronym)
-            strncpy(buffer, "IPv6-Frag", 128);
-        else
-            strncpy(buffer, "Fragment Header for IPv6", 128);
-    break;
-
-
-    case 50:
-        if(acronym)
-            strncpy(buffer, "ESP", 128);
-        else
-            strncpy(buffer, "Encap Security Payload", 128);
-    break;
-
-
-    case 51:
-        if(acronym)
-            strncpy(buffer, "AH", 128);
-        else
-            strncpy(buffer, "Authentication Header", 128);
-    break;
-
-
-    case 55:
-        if(acronym)
-            strncpy(buffer, "MOBILE", 128);
-        else
-            strncpy(buffer, "IP Mobility", 128);
-    break;
-
-
-    case 58:
-        if(acronym)
-            strncpy(buffer, "IPv6-ICMP", 128);
-        else
-            strncpy(buffer, "ICMP for IPv6", 128);
-    break;
-
-
-    case 59:
-        if(acronym)
-            strncpy(buffer, "IPv6-NoNxt", 128);
-        else
-            strncpy(buffer, "No Next Header for IPv6", 128);
-    break;
-
-
-    case 60:
-        if(acronym)
-            strncpy(buffer, "IPv6-Opts", 128);
-        else
-            strncpy(buffer, "Destination Options for IPv6", 128);
-    break;
-
-
-    case 70:
-        if(acronym)
-            strncpy(buffer, "VISA", 128);
-        else
-            strncpy(buffer, "VISA Protocol", 128);
-    break;
-
-
-    case 88:
-        if(acronym)
-            strncpy(buffer, "EIGRP", 128);
-        else
-            strncpy(buffer, "Enhanced Interior Gateway Routing Protocol ", 128);
-    break;
-
-
-    case 94:
-        if(acronym)
-            strncpy(buffer, "IPIP", 128);
-        else
-            strncpy(buffer, "IP-within-IP Encapsulation Protocol", 128);
-    break;
-
-
-    case 132:
-        if(acronym)
-            strncpy(buffer, "SCTP", 128);
-        else
-            strncpy(buffer, "Stream Control Transmission Protocol", 128);
-    break;
-
-
-    case 133:
-        if(acronym)
-            strncpy(buffer, "FC", 128);
-        else
-            strncpy(buffer, "Fibre Channel", 128);
-    break;
-
-
-    case 135:
-        if(acronym)
-            strncpy(buffer, "MH", 128);
-        else
-            strncpy(buffer, "Mobility Header", 128);
+  /* Generate these lines from nmap-protocols using the following perl command:
+   perl -lne'if(/^(\S+)\s*(\d+)\s*\#?\s*(.*)/){my$l=$3||$1;print qq{HDRTOA($2, "$1", "$l")}}'
+  */
+  HDRTOA(0, "hopopt", "IPv6 Hop-by-Hop Option")
+  HDRTOA(1, "icmp", "Internet Control Message")
+  HDRTOA(2, "igmp", "Internet Group Management")
+  HDRTOA(3, "ggp", "Gateway-to-Gateway")
+  HDRTOA(4, "ipv4", "IP in IP (encapsulation)")
+  HDRTOA(5, "st", "Stream")
+  HDRTOA(6, "tcp", "Transmission Control")
+  HDRTOA(7, "cbt", "CBT")
+  HDRTOA(8, "egp", "Exterior Gateway Protocol")
+  HDRTOA(9, "igp", "any private interior gateway")
+  HDRTOA(10, "bbn-rcc-mon", "BBN RCC Monitoring")
+  HDRTOA(11, "nvp-ii", "Network Voice Protocol")
+  HDRTOA(12, "pup", "PARC universal packet protocol")
+  HDRTOA(13, "argus", "ARGUS")
+  HDRTOA(14, "emcon", "EMCON")
+  HDRTOA(15, "xnet", "Cross Net Debugger")
+  HDRTOA(16, "chaos", "Chaos")
+  HDRTOA(17, "udp", "User Datagram")
+  HDRTOA(18, "mux", "Multiplexing")
+  HDRTOA(19, "dcn-meas", "DCN Measurement Subsystems")
+  HDRTOA(20, "hmp", "Host Monitoring")
+  HDRTOA(21, "prm", "Packet Radio Measurement")
+  HDRTOA(22, "xns-idp", "XEROX NS IDP")
+  HDRTOA(23, "trunk-1", "Trunk-1")
+  HDRTOA(24, "trunk-2", "Trunk-2")
+  HDRTOA(25, "leaf-1", "Leaf-1")
+  HDRTOA(26, "leaf-2", "Leaf-2")
+  HDRTOA(27, "rdp", "Reliable Data Protocol")
+  HDRTOA(28, "irtp", "Internet Reliable Transaction")
+  HDRTOA(29, "iso-tp4", "ISO Transport Protocol Class 4")
+  HDRTOA(30, "netblt", "Bulk Data Transfer Protocol")
+  HDRTOA(31, "mfe-nsp", "MFE Network Services Protocol")
+  HDRTOA(32, "merit-inp", "MERIT Internodal Protocol")
+  HDRTOA(33, "dccp", "Datagram Congestion Control Protocol")
+  HDRTOA(34, "3pc", "Third Party Connect Protocol")
+  HDRTOA(35, "idpr", "Inter-Domain Policy Routing Protocol")
+  HDRTOA(36, "xtp", "XTP")
+  HDRTOA(37, "ddp", "Datagram Delivery Protocol")
+  HDRTOA(38, "idpr-cmtp", "IDPR Control Message Transport Proto")
+  HDRTOA(39, "tp++", "TP+")
+  HDRTOA(40, "il", "IL Transport Protocol")
+  HDRTOA(41, "ipv6", "Ipv6")
+  HDRTOA(42, "sdrp", "Source Demand Routing Protocol")
+  HDRTOA(43, "ipv6-route", "Routing Header for IPv6")
+  HDRTOA(44, "ipv6-frag", "Fragment Header for IPv6")
+  HDRTOA(45, "idrp", "Inter-Domain Routing Protocol")
+  HDRTOA(46, "rsvp", "Reservation Protocol")
+  HDRTOA(47, "gre", "General Routing Encapsulation")
+  HDRTOA(48, "dsp", "Dynamic Source Routing Protocol. Historically MHRP")
+  HDRTOA(49, "bna", "BNA")
+  HDRTOA(50, "esp", "Encap Security Payload")
+  HDRTOA(51, "ah", "Authentication Header")
+  HDRTOA(52, "i-nlsp", "Integrated Net Layer Security  TUBA")
+  HDRTOA(53, "swipe", "IP with Encryption")
+  HDRTOA(54, "narp", "NBMA Address Resolution Protocol")
+  HDRTOA(55, "mobile", "IP Mobility")
+  HDRTOA(56, "tlsp", "Transport Layer Security Protocol using Kryptonet key management")
+  HDRTOA(57, "skip", "SKIP")
+  HDRTOA(58, "ipv6-icmp", "ICMP for IPv6")
+  HDRTOA(59, "ipv6-nonxt", "No Next Header for IPv6")
+  HDRTOA(60, "ipv6-opts", "Destination Options for IPv6")
+  HDRTOA(61, "anyhost", "any host internal protocol")
+  HDRTOA(62, "cftp", "CFTP")
+  HDRTOA(63, "anylocalnet", "any local network")
+  HDRTOA(64, "sat-expak", "SATNET and Backroom EXPAK")
+  HDRTOA(65, "kryptolan", "Kryptolan")
+  HDRTOA(66, "rvd", "MIT Remote Virtual Disk Protocol")
+  HDRTOA(67, "ippc", "Internet Pluribus Packet Core")
+  HDRTOA(68, "anydistribfs", "any distributed file system")
+  HDRTOA(69, "sat-mon", "SATNET Monitoring")
+  HDRTOA(70, "visa", "VISA Protocol")
+  HDRTOA(71, "ipcv", "Internet Packet Core Utility")
+  HDRTOA(72, "cpnx", "Computer Protocol Network Executive")
+  HDRTOA(73, "cphb", "Computer Protocol Heart Beat")
+  HDRTOA(74, "wsn", "Wang Span Network")
+  HDRTOA(75, "pvp", "Packet Video Protocol")
+  HDRTOA(76, "br-sat-mon", "Backroom SATNET Monitoring")
+  HDRTOA(77, "sun-nd", "SUN ND PROTOCOL-Temporary")
+  HDRTOA(78, "wb-mon", "WIDEBAND Monitoring")
+  HDRTOA(79, "wb-expak", "WIDEBAND EXPAK")
+  HDRTOA(80, "iso-ip", "ISO Internet Protocol")
+  HDRTOA(81, "vmtp", "VMTP")
+  HDRTOA(82, "secure-vmtp", "SECURE-VMTP")
+  HDRTOA(83, "vines", "VINES")
+  HDRTOA(84, "iptm", "Internet Protocol Traffic Manager. Historically TTP")
+  HDRTOA(85, "nsfnet-igp", "NSFNET-IGP")
+  HDRTOA(86, "dgp", "Dissimilar Gateway Protocol")
+  HDRTOA(87, "tcf", "TCF")
+  HDRTOA(88, "eigrp", "EIGRP")
+  HDRTOA(89, "ospfigp", "OSPFIGP")
+  HDRTOA(90, "sprite-rpc", "Sprite RPC Protocol")
+  HDRTOA(91, "larp", "Locus Address Resolution Protocol")
+  HDRTOA(92, "mtp", "Multicast Transport Protocol")
+  HDRTOA(93, "ax.25", "AX.")
+  HDRTOA(94, "ipip", "IP-within-IP Encapsulation Protocol")
+  HDRTOA(95, "micp", "Mobile Internetworking Control Pro.")
+  HDRTOA(96, "scc-sp", "Semaphore Communications Sec.")
+  HDRTOA(97, "etherip", "Ethernet-within-IP Encapsulation")
+  HDRTOA(98, "encap", "Encapsulation Header")
+  HDRTOA(99, "anyencrypt", "any private encryption scheme")
+  HDRTOA(100, "gmtp", "GMTP")
+  HDRTOA(101, "ifmp", "Ipsilon Flow Management Protocol")
+  HDRTOA(102, "pnni", "PNNI over IP")
+  HDRTOA(103, "pim", "Protocol Independent Multicayst")
+  HDRTOA(104, "aris", "ARIS")
+  HDRTOA(105, "scps", "SCPS")
+  HDRTOA(106, "qnx", "QNX")
+  HDRTOA(107, "a/n", "Active Networks")
+  HDRTOA(108, "ipcomp", "IP Payload Compression Protocol")
+  HDRTOA(109, "snp", "Sitara Networks Protocol")
+  HDRTOA(110, "compaq-peer", "Compaq Peer Protocol")
+  HDRTOA(111, "ipx-in-ip", "IPX in IP")
+  HDRTOA(112, "vrrp", "Virtual Router Redundancy Protocol")
+  HDRTOA(113, "pgm", "PGM Reliable Transport Protocol")
+  HDRTOA(114, "any0hop", "any 0-hop protocol")
+  HDRTOA(115, "l2tp", "Layer Two Tunneling Protocol")
+  HDRTOA(116, "ddx", "D-II Data Exchange (")
+  HDRTOA(117, "iatp", "Interactive Agent Transfer Protocol")
+  HDRTOA(118, "stp", "Schedule Transfer Protocol")
+  HDRTOA(119, "srp", "SpectraLink Radio Protocol")
+  HDRTOA(120, "uti", "UTI")
+  HDRTOA(121, "smp", "Simple Message Protocol")
+  HDRTOA(122, "sm", "Simple Multicast Protocol")
+  HDRTOA(123, "ptp", "Performance Transparency Protocol")
+  HDRTOA(124, "isis-ipv4", "ISIS over IPv4")
+  HDRTOA(125, "fire", "fire")
+  HDRTOA(126, "crtp", "Combat Radio Transport Protocol")
+  HDRTOA(127, "crudp", "Combat Radio User Datagram")
+  HDRTOA(128, "sscopmce", "sscopmce")
+  HDRTOA(129, "iplt", "iplt")
+  HDRTOA(130, "sps", "Secure Packet Shield")
+  HDRTOA(131, "pipe", "Private IP Encapsulation within IP")
+  HDRTOA(132, "sctp", "Stream Control Transmission Protocol")
+  HDRTOA(133, "fc", "Fibre Channel")
+  HDRTOA(134, "rsvp-e2e-ignore", "rsvp-e2e-ignore")
+  HDRTOA(135, "mobility-hdr", "Mobility Header")
+  HDRTOA(136, "udplite", "UDP-Lite [RFC3828]")
+  HDRTOA(137, "mpls-in-ip", "MPLS-in-IP [RFC4023]")
+  HDRTOA(138, "manet", "MANET Protocols [RFC5498]")
+  HDRTOA(139, "hip", "Host Identity Protocol")
+  HDRTOA(140, "shim6", "Shim6 Protocol [RFC5533]")
+  HDRTOA(141, "wesp", "Wrapped Encapsulating Security Payload")
+  HDRTOA(142, "rohc", "Robust Header Compression")
+  HDRTOA(253, "experimental1", "Use for experimentation and testing")
+  HDRTOA(254, "experimental2", "Use for experimentation and testing")
+  default:
+    strncpy(buffer, acronym ? "unknown" : "Unknown protocol", 128);\
     break;
 
   } /* End of switch */
@@ -2445,11 +2420,14 @@ const char *ippackethdrinfo(const u8 *packet, u32 len, int detail) {
       Snprintf(protoinfo, sizeof(protoinfo), "TCP %s:?? > %s:?? ?? %s (incomplete)",
           srchost, dsthost, ipinfo);
     }
+    /* For all cases after this, datalen is necessarily >= 8 and frag_off is <= 8 */
 
     /* CASE 2: where we are missing the first 8 bytes of the TCP header but we
      * have, at least, the next 8 bytes so we can see the ACK number, the
      * flags and window size. */
-    else if (frag_off == 8 && datalen >= 8) {
+    else if (frag_off > 0) {
+      /* Fragmentation is on 8-byte boundaries, so 8 is the only legal value here. */
+      assert(frag_off == 8);
       tcp = (struct tcp_hdr *)((u8 *) tcp - frag_off); // ugly?
 
       /* TCP Flags */
@@ -2488,8 +2466,7 @@ const char *ippackethdrinfo(const u8 *packet, u32 len, int detail) {
       }
 
       /* Create a string with TCP information relevant to the specified level of detail */
-      if (detail == LOW_DETAIL) {
-        Snprintf(protoinfo, sizeof(protoinfo), "TCP %s:?? > %s:?? %s %s %s %s",
+      if (detail == LOW_DETAIL) { Snprintf(protoinfo, sizeof(protoinfo), "TCP %s:?? > %s:?? %s %s %s %s",
           srchost, dsthost, tflags, ipinfo, tcpinfo, tcpoptinfo);
       } else if (detail == MEDIUM_DETAIL) {
         Snprintf(protoinfo, sizeof(protoinfo), "TCP %s:?? > %s:?? %s ack=%lu win=%hu %s IP [%s]",
@@ -2514,25 +2491,21 @@ const char *ippackethdrinfo(const u8 *packet, u32 len, int detail) {
         }
       }
     }
+    /* For all cases after this, frag_off is necessarily 0 */
 
     /* CASE 3: where the IP packet is not a fragment but for some reason, we
      * don't have the entire TCP header, just part of it.*/
-    else if (datalen > 0 && datalen < 20) {
-      /* We only have the first 32 bits: source and dst port */
-      if (datalen >= 4 && datalen < 8) {
-        Snprintf(protoinfo, sizeof(protoinfo), "TCP %s:%hu > %s:%hu ?? (incomplete) %s",
-          srchost, (unsigned short) ntohs(tcp->th_sport), dsthost, (unsigned short) ntohs(tcp->th_dport), ipinfo);
-      }
-
+    else if (datalen < 20) {
+      /* We know we have the first 8 bytes, so what's left? */
       /* We only have the first 64 bits: ports and seq number */
-      if (datalen >= 8 && datalen < 12) {
+      if (datalen < 12) {
         Snprintf(tcpinfo, sizeof(tcpinfo), "TCP %s:%hu > %s:%hu ?? seq=%lu (incomplete) %s",
           srchost, (unsigned short) ntohs(tcp->th_sport), dsthost,
           (unsigned short) ntohs(tcp->th_dport), (unsigned long) ntohl(tcp->th_seq), ipinfo);
       }
 
       /* We only have the first 96 bits: ports, seq and ack number */
-      if (datalen >= 12 && datalen < 16) {
+      else if (datalen < 16) {
         if (detail == LOW_DETAIL) { /* We don't print ACK in low detail */
           Snprintf(tcpinfo, sizeof(tcpinfo), "TCP %s:%hu > %s:%hu seq=%lu (incomplete), %s",
             srchost, (unsigned short) ntohs(tcp->th_sport), dsthost,
@@ -2545,8 +2518,8 @@ const char *ippackethdrinfo(const u8 *packet, u32 len, int detail) {
         }
       }
 
-      /* We are missing the last 32 bits (checksum and urgent pointer) */
-      if (datalen >= 16 && datalen < 20) {
+      /* We are missing some part of the last 32 bits (checksum and urgent pointer) */
+      else {
         p = tflags;
         /* These are basically in tcpdump order */
         if (tcp->th_flags & TH_SYN)
@@ -2598,7 +2571,7 @@ const char *ippackethdrinfo(const u8 *packet, u32 len, int detail) {
 
     /* CASE 4: where we (finally!) have a full 20 byte TCP header so we can
      * safely print all fields */
-    else if (datalen >= 20) {
+    else { /* if (datalen >= 20) */
 
       /* TCP Flags */
       p = tflags;
@@ -2660,11 +2633,6 @@ const char *ippackethdrinfo(const u8 *packet, u32 len, int detail) {
           (tcpoptinfo[0]!='\0') ? " " : "",
           tcpoptinfo, ipinfo);
       }
-    } else{
-      /* If the packet does not fall into any other category, then we have a
-         really screwed-up packet. */
-      Snprintf(protoinfo, sizeof(protoinfo), "TCP %s:?? > %s:?? ?? %s (invalid TCP)",
-        srchost, dsthost, ipinfo);
     }
 
     /* UDP INFORMATION ***********************************************************/
@@ -4188,13 +4156,83 @@ void set_pcap_filter(const char *device, pcap_t *pd, const char *bpf, ...) {
    datalink types DLT_EN10MB and DLT_LINUX_SLL. Returns -1 on error. */
 int datalink_offset(int datalink)
 {
-  if (datalink == DLT_EN10MB)
-    return ETH_HDR_LEN;
-  else if (datalink == DLT_LINUX_SLL)
-    /* The datalink type is Linux "cooked" sockets. See pcap-linktype(7). */
-    return 16;
-  else
-    return -1;
+  int offset = -1;
+  /* NOTE: IF A NEW OFFSET EVER EXCEEDS THE CURRENT MAX (24), ADJUST
+     MAX_LINK_HEADERSZ in libnetutil/netutil.h */
+  switch (datalink) {
+  case DLT_EN10MB:
+    offset = ETH_HDR_LEN;
+    break;
+  case DLT_IEEE802:
+    offset = 22;
+    break;
+#ifdef __amigaos__
+  case DLT_MIAMI:
+    offset = 16;
+    break;
+#endif
+#ifdef DLT_LOOP
+  case DLT_LOOP:
+#endif
+  case DLT_NULL:
+    offset = 4;
+    break;
+  case DLT_SLIP:
+#ifdef DLT_SLIP_BSDOS
+  case DLT_SLIP_BSDOS:
+#endif
+#if (FREEBSD || OPENBSD || NETBSD || BSDI || MACOSX)
+    offset = 16;
+#else
+    offset = 24; /* Anyone use this??? */
+#endif
+    break;
+  case DLT_PPP:
+#ifdef DLT_PPP_BSDOS
+  case DLT_PPP_BSDOS:
+#endif
+#ifdef DLT_PPP_SERIAL
+  case DLT_PPP_SERIAL:
+#endif
+#ifdef DLT_PPP_ETHER
+  case DLT_PPP_ETHER:
+#endif
+#if (FREEBSD || OPENBSD || NETBSD || BSDI || MACOSX)
+    offset = 4;
+#else
+#ifdef SOLARIS
+    offset = 8;
+#else
+    offset = 24; /* Anyone use this? */
+#endif /* ifdef solaris */
+#endif /* if freebsd || openbsd || netbsd || bsdi */
+    break;
+  case DLT_RAW:
+    offset = 0;
+    break;
+  case DLT_FDDI:
+    offset = 21;
+    break;
+#ifdef DLT_ENC
+  case DLT_ENC:
+    offset = 12;
+    break;
+#endif /* DLT_ENC */
+#ifdef DLT_LINUX_SLL
+  case DLT_LINUX_SLL:
+    offset = 16;
+    break;
+#endif
+#ifdef DLT_IPNET
+  case DLT_IPNET:
+    offset = 24;
+    break;
+#endif
+  default:
+    offset = -1;
+    break;
+  }
+  return offset;
 }
 
 /* Common subroutine for reading ARP and NS responses. Input parameters are pd,
@@ -4202,9 +4240,9 @@ int datalink_offset(int datalink)
    then the output parameters p, head, rcvdtime, datalink, and offset are filled
    in, and the function returns 1. If no frame passes before the timeout, then
    the function returns 0 and the output parameters are undefined. */
-static int read_reply_pcap(pcap_t *pd, long to_usec,
+int read_reply_pcap(pcap_t *pd, long to_usec,
   bool (*accept_callback)(const unsigned char *, const struct pcap_pkthdr *, int, size_t),
-  unsigned char **p, struct pcap_pkthdr *head, struct timeval *rcvdtime,
+  const unsigned char **p, struct pcap_pkthdr **head, struct timeval *rcvdtime,
   int *datalink, size_t *offset)
 {
   static int warning = 0;
@@ -4239,6 +4277,7 @@ static int read_reply_pcap(pcap_t *pd, long to_usec,
   do {
 
     *p = NULL;
+    int pcap_status = 0;
     /* It may be that protecting this with !pcap_selectable_fd_one_to_one is not
        necessary, that it is always safe to do a nonblocking read in this way on
        all platforms. But I have only tested it on Solaris. */
@@ -4249,22 +4288,32 @@ static int read_reply_pcap(pcap_t *pd, long to_usec,
       assert(nonblock == 0);
       rc = pcap_setnonblock(pd, 1, NULL);
       assert(rc == 0);
-      *p = (u8 *) pcap_next(pd, head);
+      pcap_status = pcap_next_ex(pd, head, p);
       rc = pcap_setnonblock(pd, nonblock, NULL);
       assert(rc == 0);
     }
 
-    if (*p == NULL) {
-      /* Nonblocking pcap_next didn't get anything. */
+    if (pcap_status == PCAP_ERROR) {
+      // TODO: Gracefully end the scan.
+      netutil_fatal("Error from pcap_next_ex: %s\n", pcap_geterr(pd));
+    }
+
+    if (pcap_status == 0 || *p == NULL) {
+      /* Nonblocking pcap_next_ex didn't get anything. */
       if (pcap_select(pd, to_usec) == 0)
         timedout = 1;
       else
-        *p = (u8 *) pcap_next(pd, head);
+        pcap_status = pcap_next_ex(pd, head, p);
     }
 
-    if (*p != NULL && accept_callback(*p, head, *datalink, *offset)) {
+    if (pcap_status == PCAP_ERROR) {
+      // TODO: Gracefully end the scan.
+      netutil_fatal("Error from pcap_next_ex: %s\n", pcap_geterr(pd));
+    }
+
+    if (pcap_status == 1 && *p != NULL && accept_callback(*p, *head, *datalink, *offset)) {
       break;
-    } else if (*p == NULL) {
+    } else if (pcap_status == 0 || *p == NULL) {
       /* Should we timeout? */
       if (to_usec == 0) {
         timedout = 1;
@@ -4286,19 +4335,20 @@ static int read_reply_pcap(pcap_t *pd, long to_usec,
     return 0;
 
   if (rcvdtime) {
-    // FIXME: I eventually need to figure out why Windows head.ts time is sometimes BEFORE the time I
-    // sent the packet (which is according to gettimeofday() in nbase).  For now, I will sadly have to
-    // use gettimeofday() for Windows in this case
-    // Actually I now allow .05 discrepancy.   So maybe this isn't needed.  I'll comment out for now.
-    // Nope: it is still needed at least for Windows.  Sometimes the time from he pcap header is a
+    // TODO: come up with a better way to synchronize pcap with gettimeofday.
+    // Npcap and WinPcap both suffer from clock drift relative to gettimeofday().
+    // We hope to fix this with better time sources for Npcap ( http://issues.nmap.org/1407 )
+    // and for Nmap ( http://issues.nmap.org/180 )
+    // For now, we use gettimeofday() for Windows in this case.
+    // Sometimes the time from the pcap header is a
     // COUPLE SECONDS before the gettimeofday() results :(.
 #if defined(WIN32) || defined(__amigaos__)
     gettimeofday(&tv_end, NULL);
     *rcvdtime = tv_end;
 #else
-    rcvdtime->tv_sec = head->ts.tv_sec;
-    rcvdtime->tv_usec = head->ts.tv_usec;
-    assert(head->ts.tv_sec);
+    rcvdtime->tv_sec = (*head)->ts.tv_sec;
+    rcvdtime->tv_usec = (*head)->ts.tv_usec;
+    assert((*head)->ts.tv_sec);
 #endif
   }
 
@@ -4340,8 +4390,8 @@ int read_arp_reply_pcap(pcap_t *pd, u8 *sendermac,
                         struct in_addr *senderIP, long to_usec,
                         struct timeval *rcvdtime,
                         void (*trace_callback)(int, const u8 *, u32, struct timeval *)) {
-  unsigned char *p;
-  struct pcap_pkthdr head;
+  const unsigned char *p;
+  struct pcap_pkthdr *head;
   int datalink;
   size_t offset;
   int rc;
@@ -4366,17 +4416,13 @@ static bool accept_ns(const unsigned char *p, const struct pcap_pkthdr *head,
   int datalink, size_t offset)
 {
   struct icmpv6_hdr *icmp6_header;
-  struct icmpv6_msg_nd *na;
 
-  if (head->caplen < offset + IP6_HDR_LEN + 32)
+  if (head->caplen < offset + IP6_HDR_LEN + ICMPV6_HDR_LEN)
     return false;
 
   icmp6_header = (struct icmpv6_hdr *)(p + offset + IP6_HDR_LEN);
-  na = (struct icmpv6_msg_nd *)(p + offset + IP6_HDR_LEN + ICMPV6_HDR_LEN);
   return icmp6_header->icmpv6_type == ICMPV6_NEIGHBOR_ADVERTISEMENT &&
-    icmp6_header->icmpv6_code == 0 &&
-    na->icmpv6_option_type == 2 &&
-    na->icmpv6_option_length == 1;
+    icmp6_header->icmpv6_code == 0;
 }
 
 /* Attempts to read one IPv6/Ethernet Neighbor Solicitation reply packet from the pcap
@@ -4390,10 +4436,10 @@ static bool accept_ns(const unsigned char *p, const struct pcap_pkthdr *head,
    by Nmap only. Any other calling this should pass NULL instead. */
 int read_ns_reply_pcap(pcap_t *pd, u8 *sendermac,
                         struct sockaddr_in6 *senderIP, long to_usec,
-                        struct timeval *rcvdtime,
+                        struct timeval *rcvdtime, bool *has_mac,
                         void (*trace_callback)(int, const u8 *, u32, struct timeval *)) {
-  unsigned char *p;
-  struct pcap_pkthdr head;
+  const unsigned char *p;
+  struct pcap_pkthdr *head;
   int datalink;
   size_t offset;
   int rc;
@@ -4404,7 +4450,16 @@ int read_ns_reply_pcap(pcap_t *pd, u8 *sendermac,
     return 0;
 
   na = (struct icmpv6_msg_nd *)(p + offset + IP6_HDR_LEN + ICMPV6_HDR_LEN);
-  memcpy(sendermac, &na->icmpv6_mac, 6);
+  if (head->caplen >= ((unsigned char *)na - p) + sizeof(struct icmpv6_msg_nd) &&
+    na->icmpv6_option_type == 2 &&
+    na->icmpv6_option_length == 1) {
+    *has_mac = true;
+    memcpy(sendermac, &na->icmpv6_mac, 6);
+  }
+  else {
+    *has_mac = false;
+  }
+  senderIP->sin6_family = AF_INET6;
   memcpy(&senderIP->sin6_addr.s6_addr, &na->icmpv6_target, 16);
 
   if (trace_callback != NULL) {
@@ -4442,6 +4497,7 @@ bool doND(const char *dev, const u8 *srcmac,
   int timeleft;
   int listenrounds;
   int rc;
+  bool has_mac;
   pcap_t *pd;
   struct sockaddr_storage rcvdIP;
   rcvdIP.ss_family = AF_INET6;
@@ -4517,7 +4573,7 @@ bool doND(const char *dev, const u8 *srcmac,
       listenrounds++;
       /* Now listen until we reach our next timeout or get an answer */
       rc = read_ns_reply_pcap(pd, targetmac, (struct sockaddr_in6 *) &rcvdIP, timeleft,
-                               &rcvdtime, traceND_callback);
+                               &rcvdtime, &has_mac, traceND_callback);
       if (rc == -1)
         netutil_fatal("%s: Received -1 response from read_ns_reply_pcap", __func__);
       if (rc == 1) {

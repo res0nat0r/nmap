@@ -180,8 +180,6 @@ if test "$have_libpcap" != "no"; then
 fi
 AC_SUBST(LIBPCAP_LIBS)
 
-PCAP_DEFINE_NETMASK_UNKNOWN
-
 AX_HAVE_EPOLL([AC_DEFINE(HAVE_EPOLL, 1, [epoll is available])], )
 AX_HAVE_POLL([AC_DEFINE(HAVE_POLL, 1, [poll is available])], )
 AC_CHECK_FUNCS(kqueue kevent, [AC_DEFINE(HAVE_KQUEUE)], )
@@ -208,6 +206,7 @@ AC_CHECK_FUNC(nanosleep, , AC_CHECK_LIB(posix4, nanosleep))
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(net/bpf.h sys/ioctl.h sys/un.h netdb.h)
+AC_CHECK_HEADERS([linux/vm_sockets.h], , , [#include <sys/socket.h>])
 
 # We test whether they specified openssl desires explicitly
 use_openssl="yes"

@@ -3,7 +3,7 @@
 
 # ***********************IMPORTANT NMAP LICENSE TERMS************************
 # *                                                                         *
-# * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+# * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
 # * Project"). Nmap is also a registered trademark of the Nmap Project.     *
 # * This program is free software; you may redistribute and/or modify it    *
 # * under the terms of the GNU General Public License as published by the   *
@@ -130,7 +130,7 @@ import gtk
 
 from zenmapGUI.SearchGUI import SearchGUI
 
-import zenmapCore.I18N
+import zenmapCore.I18N  # lgtm[py/unused-import]
 from zenmapCore.UmitConf import is_maemo
 
 from zenmapGUI.higwidgets.higboxes import HIGVBox
@@ -247,6 +247,6 @@ class SearchWindow(BaseSearchWindow, object):
 
 
 if __name__ == "__main__":
-    search = SearchWindow(lambda x: gtk.main_quit())
+    search = SearchWindow(lambda x: gtk.main_quit(), lambda x: gtk.main_quit())
     search.show_all()
     gtk.main()

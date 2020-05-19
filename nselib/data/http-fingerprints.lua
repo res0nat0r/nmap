@@ -5296,7 +5296,143 @@ table.insert(fingerprints, {
         output = "WebSphere Commerce"
       },
     }
-  })
+  });
+
+table.insert(fingerprints, {
+    category = 'management',
+    probes = {
+      {
+        path = '/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+      {
+        path = '/jira/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+      {
+        path = '/secure/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+    },
+    matches = {
+      {
+        match = '<typeId>jira</typeId>.*<version>([^<]+)</version>',
+        output = 'Atlassian Jira \\1'
+      }
+    }
+  });
+
+table.insert(fingerprints, {
+    category = 'management',
+    probes = {
+      {
+        path = '/rest/servicedeskapi/info',
+        method = 'GET'
+      },
+      {
+        path = '/jira/rest/servicedeskapi/info',
+        method = 'GET'
+      },
+      {
+        path = '/secure/rest/servicedeskapi/info',
+        method = 'GET'
+      },
+    },
+    matches = {
+      {
+        match = '"version":%s*"([^-"]+)',
+        output = 'Atlassian Jira Service Desk \\1'
+      }
+    }
+  });
+
+table.insert(fingerprints, {
+    category = 'management',
+    probes = {
+      {
+        path = '/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+      {
+        path = '/confluence/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+      {
+        path = '/wiki/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+    },
+    matches = {
+      {
+        match = '<typeId>confluence</typeId>.*<version>([^<]+)</version>',
+        output = 'Atlassian Confluence \\1'
+      }
+    }
+  });
+
+table.insert(fingerprints, {
+    category = 'management',
+    probes = {
+      {
+        path = '/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+      {
+        path = '/bitbucket/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+    },
+    matches = {
+      {
+        match = '<typeId>stash</typeId>.*<version>([^<]+)</version>',
+        output = 'Atlassian Bitbucket Server \\1'
+      },
+      {
+        match = '<typeId>bitbucket</typeId>.*<version>([^<]+)</version>',
+        output = 'Atlassian Bitbucket Server \\1'
+      }
+    }
+  });
+
+table.insert(fingerprints, {
+    category = 'management',
+    probes = {
+      {
+        path = '/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+      {
+        path = '/bamboo/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+    },
+    matches = {
+      {
+        match = '<typeId>bamboo</typeId>.*<version>([^<]+)</version>',
+        output = 'Atlassian Bamboo \\1'
+      }
+    }
+  });
+
+table.insert(fingerprints, {
+    category = 'management',
+    probes = {
+      {
+        path = '/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+      {
+        path = '/crowd/rest/applinks/1.0/manifest',
+        method = 'GET'
+      },
+    },
+    matches = {
+      {
+        match = '<typeId>crowd</typeId>.*<version>([^<]+)</version>',
+        output = 'Atlassian Crowd \\1'
+      }
+    }
+  });
 
 ------------------------------------------------
 ----     PRINTERS, WEBCAMS, PROJECTORS      ----
@@ -6233,6 +6369,22 @@ table.insert(fingerprints, {
     }
   });
 
+table.insert(fingerprints, {
+    category = 'database',
+    probes = {
+      {
+        path = '/_api/version',
+        method = 'GET'
+      }
+    },
+    matches = {
+      {
+        match = '"server":"arango",.-"version":"([^"])"',
+        output = 'ArangoDB \\1'
+      }
+    }
+  });
+
 ------------------------------------------------
 ----              MICROSOFT                 ----
 ------------------------------------------------
@@ -6951,7 +7103,7 @@ table.insert(fingerprints, {
     matches = {
       {
         match = '200',
-        output = 'Possible DD-WRT router Information Disclosure (OSVDB 70230)'
+        output = 'Possible DD-WRT router Information Disclosure (BID 45598)'
       }
     }
   });
@@ -7150,6 +7302,77 @@ table.insert(fingerprints, {
     }
   });
 
+table.insert(fingerprints, {
+    category = 'attacks',
+    probes = {
+      {
+        path = '/uir//etc/passwd',
+        method = 'GET'
+      }
+    },
+    matches = {
+      {
+        match = '200',
+        output = 'Possible D-Link router directory traversal vulnerability (CVE-2018-10822)'
+      },
+      {
+        match = 'root:',
+	output = 'D-Link router directory traversal vulnerability (CVE-2018-10822)'
+      }
+     }
+  });
+
+table.insert(fingerprints, {
+    category = 'attacks',
+    probes = {
+      {
+        path = '/uir//tmp/csman/0',
+        method = 'GET'
+      }
+    },
+    matches = {
+      {
+        match = '200',
+        output = 'Possible D-Link router plaintext password file exposure (CVE-2018-10824)'
+      }
+    }
+  });
+
+table.insert(fingerprints, {
+    category = 'attacks',
+    probes = {
+      {
+        path = '/cgi-bin/export_debug_msg.exp',
+        method = 'GET'
+      },
+      {
+        path = '/cgi-bin/config.exp',
+        method = 'GET'
+      }
+    },
+    matches = {
+      {
+        match = '200 OK',
+        output = 'Cisco RV320/RV325 Unauthenticated Diagnostic Data & Configuration Export (CVE-2019-1653)'
+      }
+    }
+  });
+
+table.insert(fingerprints, {
+    category = 'attacks',
+    probes = {
+      {
+        path = '/',
+        method = 'GET'
+      }
+    },
+    matches = {
+      {
+        match = 'var admin_name=".*";\nvar guest_name=".*";\nvar admin_pwd=".*";',
+        output = 'Cisco RV110W Wireless-N VPN Firewall Password Disclosure (CVE-2014-0683)'
+      }
+    }
+  });
 ------------------------------------------------
 ----        Open Source CMS checks          ----
 ------------------------------------------------

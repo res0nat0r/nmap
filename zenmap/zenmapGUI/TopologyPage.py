@@ -3,7 +3,7 @@
 
 # ***********************IMPORTANT NMAP LICENSE TERMS************************
 # *                                                                         *
-# * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+# * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
 # * Project"). Nmap is also a registered trademark of the Nmap Project.     *
 # * This program is free software; you may redistribute and/or modify it    *
 # * under the terms of the GNU General Public License as published by the   *
@@ -128,23 +128,11 @@
 
 import gtk
 
-from zenmapGUI.ScanToolbar import *
-from zenmapCore.NetworkInventory import NetworkInventory
-from zenmapCore.UmitConf import CommandProfile, ProfileNotFound
-from zenmapCore.NmapCommand import NmapCommand
-from zenmapCore.NmapParser import NmapParser
+from zenmapGUI.higwidgets.higboxes import HIGVBox
 
-from zenmapGUI.higwidgets.higboxes import HIGVBox, HIGHBox
-from zenmapGUI.higwidgets.higdialogs import HIGAlertDialog
-from zenmapGUI.higwidgets.higbuttons import HIGButton, HIGToggleButton
-from zenmapGUI.higwidgets.higwindows import HIGWindow
-
-from radialnet.core.XMLHandler import XMLReader
-from radialnet.gui.RadialNet import *
-from radialnet.gui.ControlWidget import *
+import radialnet.gui.RadialNet as RadialNet
+from radialnet.gui.ControlWidget import ControlWidget, ControlFisheye
 from radialnet.gui.Toolbar import Toolbar
-from radialnet.bestwidgets.boxes import *
-from radialnet.bestwidgets.windows import *
 from radialnet.util.integration import make_graph_from_hosts
 
 
@@ -169,7 +157,7 @@ class TopologyPage(HIGVBox):
         self.rn_vbox = gtk.VBox()
 
         # RadialNet's widgets
-        self.radialnet = RadialNet(LAYOUT_WEIGHTED)
+        self.radialnet = RadialNet.RadialNet(RadialNet.LAYOUT_WEIGHTED)
         self.control = ControlWidget(self.radialnet)
         self.fisheye = ControlFisheye(self.radialnet)
         self.rn_toolbar = Toolbar(self.radialnet,

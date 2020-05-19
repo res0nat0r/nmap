@@ -4,7 +4,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -308,7 +308,7 @@ class PortList {
   void getServiceDeductions(u16 portno, int protocol, struct serviceDeductions *sd) const;
 
 #ifndef NOLUA
-  void addScriptResult(u16 portno, int protocol, ScriptResult& sr);
+  void addScriptResult(u16 portno, int protocol, const ScriptResult& sr);
 #endif
 
   /* Cycles through the 0 or more "ignored" ports which should be

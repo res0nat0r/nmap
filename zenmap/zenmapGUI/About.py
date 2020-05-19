@@ -3,7 +3,7 @@
 
 # ***********************IMPORTANT NMAP LICENSE TERMS************************
 # *                                                                         *
-# * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+# * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
 # * Project"). Nmap is also a registered trademark of the Nmap Project.     *
 # * This program is free software; you may redistribute and/or modify it    *
 # * under the terms of the GNU General Public License as published by the   *
@@ -127,7 +127,6 @@
 # ***************************************************************************/
 
 import gtk
-import os.path
 import webbrowser
 
 from zenmapGUI.higwidgets.higdialogs import HIGDialog
@@ -142,8 +141,7 @@ from zenmapGUI.higwidgets.higtextviewers import HIGTextView
 from zenmapCore.Name import APP_DISPLAY_NAME, APP_WEB_SITE, APP_COPYRIGHT, \
     NMAP_DISPLAY_NAME, NMAP_WEB_SITE, UMIT_DISPLAY_NAME, UMIT_WEB_SITE
 from zenmapCore.Version import VERSION
-from zenmapCore.Paths import Path
-import zenmapCore.I18N
+import zenmapCore.I18N  # lgtm[py/unused-import]
 
 
 # Prevent loading PyXML

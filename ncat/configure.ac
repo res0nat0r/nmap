@@ -39,7 +39,8 @@ AC_PATH_TOOL([STRIP], [strip], [/bin/true])
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h limits.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/param.h sys/socket.h sys/time.h sys/timeb.h unistd.h sys/un.h])
+AC_CHECK_HEADERS([fcntl.h limits.h netdb.h netinet/in.h stdlib.h string.h strings.h sys/param.h sys/socket.h sys/time.h unistd.h sys/un.h])
+AC_CHECK_HEADERS([linux/vm_sockets.h], , , [#include <sys/socket.h>])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STAT
@@ -51,7 +52,6 @@ AC_FUNC_FORK
 AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([dup2 gettimeofday inet_ntoa memset mkstemp select socket strcasecmp strchr strdup strerror strncasecmp strtol])
 AC_SEARCH_LIBS(setsockopt, socket)
 # Ncat does not call gethostbyname directly, but some of the libraries
 # it links to (such as libpcap) do. Instead it calls getaddrinfo. At
@@ -62,6 +62,7 @@ AC_SEARCH_LIBS(setsockopt, socket)
 AC_SEARCH_LIBS(gethostbyname, nsl)
 # OpenSSL requires dlopen on some platforms
 AC_SEARCH_LIBS(dlopen, dl)
+AC_CHECK_FUNCS([dup2 gettimeofday inet_ntoa memset mkstemp select socket strcasecmp strchr strdup strerror strncasecmp strtol])
 
 # If they didn't specify it, we try to find it
 if test "$use_openssl" = "yes" -a -z "$specialssldir" ; then

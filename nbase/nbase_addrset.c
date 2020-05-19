@@ -2,7 +2,7 @@
  * nbase_addrset.c -- Address set (addrset) management.                          *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -365,6 +365,7 @@ static struct trie_node *new_trie_node(const u32 *addr, const u32 *mask)
  * and one that does not. */
 static void trie_split (struct trie_node *this, const u32 *addr)
 {
+  struct trie_node *new_node;
   u32 new_mask[4] = {0,0,0,0};
   u8 i;
   /* Calculate the mask of the common prefix */
@@ -375,7 +376,7 @@ static void trie_split (struct trie_node *this, const u32 *addr)
     }
   }
   /* Make a copy of this node to continue matching what it has been */
-  struct trie_node *new_node = new_trie_node(this->addr, this->mask);
+  new_node = new_trie_node(this->addr, this->mask);
   new_node->next_bit_one = this->next_bit_one;
   new_node->next_bit_zero = this->next_bit_zero;
   /* Adjust this node to the smaller mask */
@@ -476,30 +477,32 @@ static int sockaddr_to_addr(const struct sockaddr *sa, u32 *addr)
 
 static int sockaddr_to_mask (const struct sockaddr *sa, int bits, u32 *mask)
 {
-  s8 i;
-  int unmasked_bits = 0;
+  int i, k;
   if (bits >= 0) {
     if (sa->sa_family == AF_INET) {
-      unmasked_bits = 32 - bits;
+      bits += 96;
     }
 #ifdef HAVE_IPV6
     else if (sa->sa_family == AF_INET6) {
-      unmasked_bits = 128 - bits;
+      ; /* do nothing */
     }
 #endif
     else {
       return 0;
     }
   }
+  else
+    bits = 128;
+  k = bits / 32;
   for (i=0; i < 4; i++) {
-    if (unmasked_bits <= 32 * (3 - i)) {
+    if (i < k) {
       mask[i] = 0xffffffff;
     }
-    else if (unmasked_bits >= 32 * (4 - i)) {
+    else if (i > k) {
       mask[i] = 0;
     }
     else {
-      mask[i] = ~((1 << (unmasked_bits - (32 * (4 - i)))) - 1);
+      mask[i] = 0xfffffffe << (31 - bits % 32);
     }
   }
   return 1;
@@ -598,6 +601,7 @@ void addrset_print(FILE *fp, const struct addrset *set)
 {
   const struct addrset_elem *elem;
   for (elem = set->head; elem != NULL; elem = elem->next) {
+    fprintf(fp, "addrset_elem: %p\n", elem);
     addrset_elem_print(fp, elem);
   }
 }

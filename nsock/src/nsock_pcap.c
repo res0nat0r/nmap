@@ -4,7 +4,7 @@
  *                                                                         *
  ***********************IMPORTANT NSOCK LICENSE TERMS***********************
  *                                                                         *
- * The nsock parallel socket event library is (C) 1999-2018 Insecure.Com   *
+ * The nsock parallel socket event library is (C) 1999-2019 Insecure.Com   *
  * LLC This library is free software; you may redistribute and/or          *
  * modify it under the terms of the GNU General Public License as          *
  * published by the Free Software Foundation; Version 2.  This guarantees  *
@@ -299,6 +299,7 @@ int nsock_pcap_open(nsock_pool nsp, nsock_iod nsiod, const char *pcap_device,
     // PCAP error
     nsock_log_error("pcap_activate(%s) FAILED: %s.", pcap_device, pcap_geterr(mp->pt));
     pcap_close(mp->pt);
+    mp->pt = NULL;
     return -1;
   }
   else if (failed > 0) {

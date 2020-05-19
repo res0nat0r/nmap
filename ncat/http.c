@@ -2,7 +2,7 @@
  * http.c -- HTTP network interaction, parsing, and construction.          *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -700,7 +700,7 @@ static const char *read_quoted_string(const char *s, char **quoted_string)
         if (*t == '\\') {
             t++;
             /* You can only escape a CHAR, octets 0-127. But we disallow 0. */
-            if (*t <= 0 || *t > 127) {
+            if (*t <= 0) {
                 free(buf);
                 return NULL;
             }

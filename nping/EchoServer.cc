@@ -4,7 +4,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -199,7 +199,7 @@ NEPContext *EchoServer::getClientContext(nsock_iod iod){
   * the context could not be found.  */
 int EchoServer::destroyClientContext(clientid_t clnt){
   bool deleted=false;
-  vector<NEPContext>::iterator it;
+  std::vector<NEPContext>::iterator it;
   /* Iterate through the context array and delete the one that belongs to clnt */
   for ( it=this->client_ctx.begin(); it<this->client_ctx.end(); it++){
       if(it->getIdentifier()==clnt){

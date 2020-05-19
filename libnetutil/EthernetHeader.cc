@@ -7,7 +7,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -284,7 +284,7 @@ int EthernetHeader::setEtherType(u16 val){
 
 
 /** Returns destination port in HOST byte order */
-const u16 EthernetHeader::getEtherType() const {
+u16 EthernetHeader::getEtherType() const {
   return ntohs(this->h.eth_type);
 } /* End of getEtherType() */
 

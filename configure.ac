@@ -203,7 +203,7 @@ esac
 AC_SUBST(LUA_CFLAGS)
 
 dnl Checks for header files.
-AC_CHECK_HEADERS(pwd.h termios.h sys/sockio.h stdint.h)
+AC_CHECK_HEADERS(pwd.h termios.h sys/sockio.h stdint.h sys/stat.h fcntl.h)
 AC_CHECK_HEADERS(linux/rtnetlink.h,,,[#include <netinet/in.h>])
 dnl A special check required for <net/if.h> on Darwin. See
 dnl http://www.gnu.org/software/autoconf/manual/html_node/Header-Portability.html.
@@ -485,7 +485,6 @@ else
   # link with -lpcap for the purposes of this test
   LIBS_OLD="$LIBS"
   LIBS="$LIBS -lpcap"
-  PCAP_DEFINE_NETMASK_UNKNOWN
   AC_CHECK_FUNCS([pcap_set_immediate_mode])
   # Restore libs
   LIBS="$LIBS_OLD"
@@ -565,11 +564,6 @@ AC_SUBST(PCRE_DIST_CLEAN)
 have_libz="no"
 requested_included_libz="no"
 test "${with_libz+set}" != "set" && with_libz="yes"
-# For now, libz is a libssh2 dependency.
-# If we end up using it for something else, we'll have to change this line.
-if test "x${with_libssh2}" = "xno"; then
-  with_libz=no
-fi
 
 AC_ARG_WITH(libz,
 AC_HELP_STRING([--with-libz=DIR], [Use specific copy of libz])
@@ -680,11 +674,11 @@ AC_HELP_STRING([--without-libssh2], [Compile without libssh2]),
       AC_CHECK_LIB(ssh2, libssh2_version,
         [have_libssh2=yes
         LIBSSH2_INC=$with_libssh2/include
-        LIBSSH2_LIB=$with_libssh2/lib],,[-lm])
+        LIBSSH2_LIB=$with_libssh2/lib],
+        [LDFLAGS=$_ldflags
+        CPPFLAGS=$_cppflags],[-lm])
       ])
 
-    LDFLAGS=$_ldflags
-    CPPFLAGS=$_cppflags
   ;;
   esac]
 )

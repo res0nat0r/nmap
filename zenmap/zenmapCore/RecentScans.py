@@ -3,7 +3,7 @@
 
 # ***********************IMPORTANT NMAP LICENSE TERMS************************
 # *                                                                         *
-# * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+# * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
 # * Project"). Nmap is also a registered trademark of the Nmap Project.     *
 # * This program is free software; you may redistribute and/or modify it    *
 # * under the terms of the GNU General Public License as published by the   *
@@ -137,7 +137,7 @@ class RecentScans(object):
 
         try:
             self.recent_scans_file = Path.recent_scans
-        except:
+        except Exception:
             self.recent_scans_file = False
 
         if (self.recent_scans_file and
@@ -180,8 +180,6 @@ class RecentScans(object):
 recent_scans = RecentScans()
 
 if __name__ == "__main__":
-    import sys
-    from os.path import split
     r = RecentScans()
     print ">>> Getting empty list:", r.get_recent_scans_list()
     print ">>> Adding recent scan bla:", r.add_recent_scan("bla")

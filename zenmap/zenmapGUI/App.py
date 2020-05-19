@@ -3,7 +3,7 @@
 
 # ***********************IMPORTANT NMAP LICENSE TERMS************************
 # *                                                                         *
-# * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+# * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
 # * Project"). Nmap is also a registered trademark of the Nmap Project.     *
 # * This program is free software; you may redistribute and/or modify it    *
 # * under the terms of the GNU General Public License as published by the   *
@@ -159,15 +159,13 @@ warnings.resetwarnings()
 
 from zenmapGUI.higwidgets.higdialogs import HIGAlertDialog
 
+from zenmapCore.UmitConf import is_maemo, SearchConfig
 import zenmapCore.UmitConf
-import zenmapCore.Paths
-from zenmapCore.UmitConf import is_maemo
 from zenmapCore.UmitLogging import log
 from zenmapCore.UmitOptionParser import option_parser
 from zenmapCore.Name import APP_NAME, APP_DISPLAY_NAME, NMAP_DISPLAY_NAME
-from zenmapCore.UmitConf import SearchConfig
-import zenmapCore.I18N
-from zenmapCore.Paths import Path
+import zenmapCore.I18N  # lgtm[py/unused-import]
+from zenmapCore.Paths import Path, create_user_config_dir
 from zenmapCore.Name import APP_DISPLAY_NAME
 
 from zenmapGUI.higwidgets.higdialogs import HIGAlertDialog
@@ -229,7 +227,6 @@ def install_excepthook():
         # Cause an exception if PyGTK can't open a display. Normally this just
         # produces a warning, but the lack of a display eventually causes a
         # segmentation fault. See http://live.gnome.org/PyGTK/WhatsNew210.
-        import warnings
         warnings.filterwarnings("error", module="gtk")
         import gtk
         warnings.resetwarnings()
@@ -284,7 +281,7 @@ def run():
     try:
         # Create the ~/.zenmap directory by copying from the system-wide
         # template directory.
-        zenmapCore.Paths.create_user_config_dir(
+        create_user_config_dir(
                 Path.user_config_dir, Path.config_dir)
     except (IOError, OSError), e:
         error_dialog = HIGAlertDialog(

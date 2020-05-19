@@ -3,7 +3,7 @@
 
 # ***********************IMPORTANT NMAP LICENSE TERMS************************
 # *                                                                         *
-# * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+# * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
 # * Project"). Nmap is also a registered trademark of the Nmap Project.     *
 # * This program is free software; you may redistribute and/or modify it    *
 # * under the terms of the GNU General Public License as published by the   *
@@ -137,7 +137,7 @@ class TargetList(object):
 
         try:
             self.target_list_file = Path.target_list
-        except:
+        except Exception:
             self.target_list_file = False
 
         #import pdb; pdb.set_trace()
@@ -181,8 +181,6 @@ class TargetList(object):
 target_list = TargetList()
 
 if __name__ == "__main__":
-    import sys
-    from os.path import split
     t = TargetList()
     print ">>> Getting empty list:", t.get_target_list()
     print ">>> Adding target 127.0.0.1:", t.add_target("127.0.0.3")

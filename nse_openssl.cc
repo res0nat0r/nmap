@@ -46,14 +46,17 @@
 
 typedef struct bignum_data {
   BIGNUM * bn;
+  bool should_free;
 } bignum_data_t;
 
-static int nse_pushbn( lua_State *L, BIGNUM *num )
+static int nse_pushbn( lua_State *L, BIGNUM *num)
 {
   bignum_data_t * data = (bignum_data_t *) lua_newuserdata( L, sizeof(bignum_data_t));
   luaL_getmetatable( L, "BIGNUM" );
   lua_setmetatable( L, -2 );
   data->bn = num;
+  /* Currently this is true for all uses in this file. */
+  data->should_free = true;
   return 1;
 }
 
@@ -136,14 +139,14 @@ static int l_bignum_add( lua_State *L ) /** bignum_add( BIGNUM a, BIGNUM b ) */
 static int l_bignum_num_bits( lua_State *L ) /** bignum_num_bits( BIGNUM bn ) */
 {
   bignum_data_t * userdata = (bignum_data_t *) luaL_checkudata(L, 1, "BIGNUM");
-  lua_pushnumber( L, BN_num_bits( userdata->bn) );
+  lua_pushinteger( L, BN_num_bits( userdata->bn) );
   return 1;
 }
 
 static int l_bignum_num_bytes( lua_State *L ) /** bignum_num_bytes( BIGNUM bn ) */
 {
   bignum_data_t * userdata = (bignum_data_t *) luaL_checkudata(L, 1, "BIGNUM");
-  lua_pushnumber( L, BN_num_bytes( userdata->bn) );
+  lua_pushinteger( L, BN_num_bytes( userdata->bn) );
   return 1;
 }
 
@@ -235,7 +238,9 @@ static int l_bignum_bn2hex( lua_State *L ) /** bignum_bn2hex( BIGNUM bn ) */
 static int l_bignum_free( lua_State *L ) /** bignum_free( bignum ) */
 {
   bignum_data_t * userdata = (bignum_data_t *) luaL_checkudata(L, 1, "BIGNUM");
-  BN_clear_free( userdata->bn );
+  if (userdata->should_free) {
+    BN_clear_free( userdata->bn );
+  }
   return 0;
 }
 
@@ -645,6 +650,9 @@ LUALIB_API int luaopen_openssl(lua_State *L) {
   // metatable.__index = metatable
   lua_pushvalue( L, -1 );
   lua_setfield( L, -2, "__index" );
+  // metatable.__tostring = bignum_bn2hex
+  lua_pushcfunction( L, l_bignum_bn2hex );
+  lua_setfield( L, -2, "__tostring" );
   // register methods
   luaL_setfuncs(L, bignum_methods, 0);
 

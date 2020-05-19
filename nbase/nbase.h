@@ -9,7 +9,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -186,6 +186,7 @@
 
 #include <stdlib.h>
 #include <ctype.h>
+#include <time.h>
 
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
@@ -357,6 +358,7 @@ extern "C" int vsnprintf (char *, size_t, const char *, va_list);
 #define open _open
 #define stricmp _stricmp
 #define putenv _putenv
+#define tzset _tzset
 
 #if !defined(__GNUC__)
 #define snprintf _snprintf
@@ -452,6 +454,12 @@ char *socket_strerror(int errnum);
 void usleep(unsigned long usec);
 #endif
 #endif
+
+/* localtime is not thread safe. This will use a thread safe alternative on
+ * supported platforms. */
+int n_localtime(const time_t *timer, struct tm *result);
+int n_gmtime(const time_t *timer, struct tm *result);
+int n_ctime(char *buffer, size_t bufsz, const time_t *timer);
 
 /***************** String functions -- See nbase_str.c ******************/
 /* I modified this conditional because !@# Redhat does not easily provide

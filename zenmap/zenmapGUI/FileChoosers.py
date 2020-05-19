@@ -3,7 +3,7 @@
 
 # ***********************IMPORTANT NMAP LICENSE TERMS************************
 # *                                                                         *
-# * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+# * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
 # * Project"). Nmap is also a registered trademark of the Nmap Project.     *
 # * This program is free software; you may redistribute and/or modify it    *
 # * under the terms of the GNU General Public License as published by the   *
@@ -130,7 +130,7 @@ import os.path
 import sys
 import gtk
 
-import zenmapCore.I18N
+import zenmapCore.I18N  # lgtm[py/unused-import]
 
 RESPONSE_OPEN_DIRECTORY = 1
 
@@ -179,7 +179,7 @@ class UnicodeFileChooserDialog(gtk.FileChooserDialog):
             encoding = sys.getfilesystemencoding() or "UTF-8"
         try:
             filename = filename.decode(encoding)
-        except:
+        except Exception:
             pass
         return filename
 

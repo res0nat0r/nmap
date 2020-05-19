@@ -4,7 +4,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -135,7 +135,6 @@
 #include "nsock.h"
 #include "EchoHeader.h"
 #include <vector>
-using namespace std;
 
 /* SERVER STATE MACHINE                                                       */
 /*                      _                                                     */
@@ -204,7 +203,7 @@ class NEPContext {
         u8 client_nonce[NONCE_LEN];
         bool server_nonce_set;
         bool client_nonce_set;
-        vector<fspec_t> fspecs;
+        std::vector<fspec_t> fspecs;
         struct sockaddr_storage clnt_addr;
 
         u8 *generateKey(int key_type, size_t *final_len);
@@ -218,7 +217,7 @@ class NEPContext {
         int setIdentifier(clientid_t clnt);
         clientid_t getIdentifier();
 
-        int setAddress(struct sockaddr_storage a);
+        int setAddress(const struct sockaddr_storage &a);
         struct sockaddr_storage getAddress();
 
         int setNsockIOD(nsock_iod iod);

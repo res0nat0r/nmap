@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -292,8 +292,7 @@ int unblock_socket(int sd) {
 #ifdef WIN32
   unsigned long one = 1;
 
-  if (sd != 501) /* Hack related to WinIP Raw Socket support */
-    ioctlsocket(sd, FIONBIO, &one);
+  ioctlsocket(sd, FIONBIO, &one);
 
   return 0;
 #else
@@ -314,8 +313,7 @@ int block_socket(int sd) {
 #ifdef WIN32
   unsigned long options = 0;
 
-  if (sd != 501)
-    ioctlsocket(sd, FIONBIO, &options);
+  ioctlsocket(sd, FIONBIO, &options);
 
   return 0;
 #else

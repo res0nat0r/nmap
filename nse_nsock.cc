@@ -85,7 +85,7 @@ static nsock_pool new_pool (lua_State *L)
   nsock_pool *nspp;
 
   /* configure logging */
-  nsock_set_log_function(nmap_nsock_stderr_logger);
+  nmap_set_nsock_logger();
   nmap_adjust_loglevel(o.scriptTrace());
 
   nsock_pool_set_device(nsp, o.device);
@@ -365,6 +365,16 @@ static void callback (nsock_pool nsp, nsock_event nse, void *ud)
     trace(nse_iod(nse), nu->action, nu->direction);
     nu->action = "ERROR";
     return;
+  }
+  switch (nse_type(nse)) {
+    case NSE_TYPE_CONNECT:
+    case NSE_TYPE_CONNECT_SSL:
+      /* After a connect or reconnect event, allow the socket to be reused by a
+       * different thread. */
+      nu->thread = NULL;
+      break;
+    default:
+      break;
   }
   assert(lua_status(L) == LUA_YIELD);
   trace(nse_iod(nse), nu->action, nu->direction);
@@ -1019,16 +1029,18 @@ static int l_pcap_open (lua_State *L)
 
     lua_pop(L, 1); /* the nonexistant socket */
     nsiod = (nsock_iod *) lua_newuserdata(L, sizeof(nsock_iod));
+    *nsiod = nsock_iod_new(nsp, nu);
+    rc = nsock_pcap_open(nsp, *nsiod, lua_tostring(L, 6), snaplen,
+                         lua_toboolean(L, 4), bpf);
+    if (rc) {
+      nsock_iod_delete(*nsiod, NSOCK_PENDING_ERROR);
+      luaL_error(L, "can't open pcap reader on %s", device);
+    }
     lua_pushvalue(L, PCAP_SOCKET);
     lua_setmetatable(L, -2);
-    *nsiod = nsock_iod_new(nsp, nu);
     lua_pushvalue(L, 7); /* the pcap socket key */
     lua_pushvalue(L, -2); /* the pcap socket nsiod */
     lua_rawset(L, KEY_PCAP); /* KEY_PCAP["dev|snap|promis|bpf"] = pcap_nsiod */
-    rc = nsock_pcap_open(nsp, *nsiod, lua_tostring(L, 6), snaplen,
-                         lua_toboolean(L, 4), bpf);
-    if (rc)
-      luaL_error(L, "can't open pcap reader on %s", device);
   }
   lua_getuservalue(L, 1); /* the socket user value */
   lua_pushvalue(L, -2); /* the pcap socket nsiod */

@@ -6,7 +6,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -201,7 +201,7 @@ int TargetGroup::rewind() {
  * get_next_host should be used for skipping the last octet :-)
  * returns: number of hosts skipped */
 int TargetGroup::skip_range(_octet_nums octet) {
-  unsigned long hosts_skipped = 0, /* number of hosts skipped */
+   u32 hosts_skipped = 0, /* number of hosts skipped */
       oct = 0;           /* octect number */
       int i = 0;                 /* simple lcv */
 
@@ -212,11 +212,11 @@ int TargetGroup::skip_range(_octet_nums octet) {
   switch (octet) {
     case FIRST_OCTET:
       oct = 0;
-      hosts_skipped = (last[1] + 1) * (last[2] + 1) * (last[3] + 1);
+      hosts_skipped = (u32)(last[1] + 1) * (last[2] + 1) * (last[3] + 1);
       break;
     case SECOND_OCTET:
       oct = 1;
-      hosts_skipped = (last[2] + 1) * (last[3] + 1);
+      hosts_skipped = (u32)(last[2] + 1) * (last[3] + 1);
       break;
     case THIRD_OCTET:
       oct = 2;

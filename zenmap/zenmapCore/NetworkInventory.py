@@ -3,7 +3,7 @@
 
 # ***********************IMPORTANT NMAP LICENSE TERMS************************
 # *                                                                         *
-# * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+# * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
 # * Project"). Nmap is also a registered trademark of the Nmap Project.     *
 # * This program is free software; you may redistribute and/or modify it    *
 # * under the terms of the GNU General Public License as published by the   *
@@ -648,7 +648,7 @@ class NetworkInventoryTest(unittest.TestCase):
         inv.add_scan(scan_2)
         try:
             inv.remove_scan(scan_3)
-        except:
+        except Exception:
             pass
         self.assertEqual(added_ips, inv.hosts.keys())
         self.assertEqual(host_a.hostnames, ["a"])
