@@ -4,16 +4,4 @@ agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
-
-blocks:
-  - name: "Build matrix"
-    task:
-      jobs:
-      - name: Matrix
-        matrix:
-          - env_var: FOO
-            values: [ "A", "B", "C" ]
-          - env_var: BAR
-            values: [ "1", "2", "3" ]
-        commands:
-          - echo FOO=$FOO BAR=$BAR
+blocks: []
