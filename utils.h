@@ -4,7 +4,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -170,7 +170,7 @@ template<class T> T box(T bmin, T bmax, T bnum) {
 
 int wildtest(char *wild, char *test);
 
-void nmap_hexdump(unsigned char *cp, unsigned int length);
+void nmap_hexdump(const unsigned char *cp, unsigned int length);
 
 void genfry(unsigned char *arr, int elem_sz, int num_elem);
 void shortfry(unsigned short *arr, int num_elem);
@@ -189,7 +189,7 @@ u8 *parse_hex_string(char *str, size_t *outlen);
 
 int cpe_get_part(const char *cpe);
 
-char *mmapfile(char *fname, int *length, int openflags);
+char *mmapfile(char *fname, s64 *length, int openflags);
 
 #ifdef WIN32
 int win32_munmap(char *filestr, int filelen);

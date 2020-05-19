@@ -9,7 +9,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -173,12 +173,22 @@
 #ifndef NOLUA
 #include "nse_main.h"
 #endif
-#include <nsock.h>
 class PortList;
 class Target;
 
 #include <stdarg.h>
 #include <string>
+
+#if TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# if HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
 
 #ifdef WIN32
 /* Show a fatal error explaining that an interface is not Ethernet and won't
@@ -253,6 +263,9 @@ void write_host_header(Target *currenths);
    machine log. */
 void write_host_status(Target *currenths);
 
+/* Writes host status info to the XML stream wrapped in a <hosthint> tag */
+void write_xml_hosthint(Target *currenths);
+
 /* Prints the formatted OS Scan output to stdout, logfiles, etc (but only
    if an OS Scan was performed */
 void printosscanoutput(Target *currenths);
@@ -297,7 +310,7 @@ void printdatafilepaths();
 
 /* nsock logging interface */
 void nmap_adjust_loglevel(bool trace);
-void nmap_nsock_stderr_logger(const struct nsock_log_rec *rec);
+void nmap_set_nsock_logger();
 
 #endif /* OUTPUT_H */
 

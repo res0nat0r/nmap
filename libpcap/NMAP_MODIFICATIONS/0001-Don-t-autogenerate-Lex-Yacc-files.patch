@@ -1,44 +1,29 @@
-From f38b1fc263d65a53746108e2c9afacf1dc6a058a Mon Sep 17 00:00:00 2001
-From: Daniel Miller <daniel@bonsaiviking.com>
-Date: Fri, 1 May 2015 14:44:28 +0000
-Subject: [PATCH 1/2] Don't autogenerate Lex/Yacc files.
-
----
- libpcap/Makefile.in  | 33 ++++++++++-----------------------
- libpcap/configure.in | 20 --------------------
- 2 files changed, 10 insertions(+), 43 deletions(-)
-
 diff --git a/libpcap/Makefile.in b/libpcap/Makefile.in
-index f317973..577b848 100644
+index 5a6b165..e7f4167 100644
 --- a/libpcap/Makefile.in
 +++ b/libpcap/Makefile.in
-@@ -69,14 +69,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
+@@ -76,9 +76,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
  INSTALL_DATA = @INSTALL_DATA@
  RANLIB = @RANLIB@
  
--#
--# Flex and bison allow you to specify the prefixes of the global symbols
--# used by the generated parser.  This allows programs to use lex/yacc
--# and link against libpcap.  If you don't have flex or bison, get them.
--#
--LEX = @V_LEX@
--YACC = @V_YACC@
+-LEX = @LEX@
+-YACC = @YACC@
 -
  # Explicitly define compilation rule since SunOS 4's make doesn't like gcc.
  # Also, gcc does not remove the .o before forking 'as', which can be a
  # problem if you don't own the file but can write to the directory.
-@@ -152,7 +144,7 @@ TAGFILES = \
+@@ -154,7 +151,7 @@ TAGFILES = \
  	$(SRC) $(HDR)
  
- CLEANFILES = $(OBJ) libpcap.* $(TESTS) \
+ CLEANFILES = $(OBJ) libpcap.a libpcap.so.`cat $(srcdir)/VERSION` \
 -	$(PROG)-`cat $(srcdir)/VERSION`.tar.gz $(GENSRC) $(GENHDR) \
 +	$(PROG)-`cat $(srcdir)/VERSION`.tar.gz \
- 	lex.yy.c pcap-config
+ 	lex.yy.c pcap-config libpcap.pc
  
  MAN1 = pcap-config.1
-@@ -360,6 +352,15 @@ EXTRA_DIST = \
+@@ -387,6 +384,15 @@ EXTRA_DIST = \
  
- all: libpcap.a shared pcap-config
+ all: libpcap.a shared $(BUILD_RPCAPD) libpcap.pc pcap-config
  
 +# Inhibit implicit rule Make seems to have for using yacc/lex to
 +# recompile new scanner.c/grammar.c -- we ship ones which we want to
@@ -52,67 +37,96 @@ index f317973..577b848 100644
  libpcap.a: $(OBJ)
  	@rm -f $@
  	$(AR) rc $@ $(OBJ) $(ADDLARCHIVEOBJS)
-@@ -443,25 +444,11 @@ libpcap.shareda: $(OBJ)
+@@ -468,27 +474,9 @@ libpcap.shareda: $(OBJ)
  #
  libpcap.none:
  
 -scanner.c: $(srcdir)/scanner.l
--	@rm -f $@ $@.bottom
--	$(srcdir)/runlex.sh $(LEX) -o$@ $<
--	mv $@ $@.bottom
--	cat $@.top $@.bottom > $@
--	@rm $@.bottom
+-	$(LEX) -P pcap_ --header-file=scanner.h --nounput -o scanner.c $<
+-scanner.h: scanner.c
+-## Recover from the removal of $@
+-	@if test -f $@; then :; else \
+-		rm -f scanner.c; \
+-		$(MAKE) $(MAKEFLAGS) scanner.c; \
+-	fi
 -
- scanner.o: scanner.c tokdefs.h
+ scanner.o: scanner.c grammar.h
  	$(CC) $(FULL_CFLAGS) -c scanner.c
  
- pcap.o: version.h
- 
--tokdefs.h: grammar.c
 -grammar.c: $(srcdir)/grammar.y
--	@rm -f grammar.c tokdefs.h
--	$(YACC) -d $<
--	mv y.tab.c grammar.c
--	mv y.tab.h tokdefs.h
--
- grammar.o: grammar.c
- 	@rm -f $@
- 	$(CC) $(FULL_CFLAGS) -Dyylval=pcap_lval -c grammar.c
-diff --git a/libpcap/configure.in b/libpcap/configure.in
-index be4b29e..ec87283 100644
---- a/libpcap/configure.in
-+++ b/libpcap/configure.in
-@@ -1051,24 +1051,6 @@ if test "$V_PCAP" = snf -a "$ac_cv_lbl_snf_api" = no; then
- 	AC_MSG_ERROR(Specifying the capture type as 'snf' requires the Myricom Sniffer API to be present; use --with-snf=DIR)
- fi
- 
--AC_LBL_LEX_AND_YACC(V_LEX, V_YACC, pcap_)
--if test "$V_LEX" = lex ; then
--# Some versions of lex can't handle the definitions section of scanner.l .
--# Try lexing it and complain if it can't deal.
--	AC_CACHE_CHECK([for capable lex], tcpdump_cv_capable_lex,
--		if lex -t scanner.l > /dev/null 2>&1; then
--			tcpdump_cv_capable_lex=yes
--		else
--			tcpdump_cv_capable_lex=insufficient
--		fi)
--	if test $tcpdump_cv_capable_lex = insufficient ; then
--		AC_MSG_ERROR([Your operating system's lex is insufficient to compile
-- libpcap.  flex is a lex replacement that has many advantages, including
-- being able to compile libpcap.  For more information, see
-- http://www.gnu.org/software/flex/flex.html .])
+-	$(YACC) -p pcap_ -o grammar.c -d $<
+-grammar.h: grammar.c
+-## Recover from the removal of $@
+-	@if test -f $@; then :; else \
+-		rm -f grammar.c; \
+-		$(MAKE) $(MAKEFLAGS) grammar.c; \
 -	fi
+-
+ grammar.o: grammar.c scanner.h
+ 	$(CC) $(FULL_CFLAGS) -c grammar.c
+ 
+diff --git a/libpcap/configure.ac b/libpcap/configure.ac
+index 6255f07..5e741cb 100644
+--- a/libpcap/configure.ac
++++ b/libpcap/configure.ac
+@@ -1594,50 +1594,6 @@ fi
+ AC_MSG_RESULT(${enable_yydebug-no})
+ 
+ #
+-# Look for {f}lex.
+-#
+-AC_PROG_LEX
+-if test "$LEX" = ":"; then
+-	AC_MSG_ERROR([Neither flex nor lex was found.])
 -fi
 -
+-#
+-# Make sure {f}lex supports the -P, --header-file, and --nounput flags
+-# and supports processing our scanner.l.
+-#
+-AC_CACHE_CHECK([for capable lex], tcpdump_cv_capable_lex,
+-	if $LEX -P pcap_ --header-file=/dev/null --nounput -t $srcdir/scanner.l > /dev/null 2>&1; then
+-	    tcpdump_cv_capable_lex=yes
+-	else
+-	    tcpdump_cv_capable_lex=insufficient
+-	fi)
+-if test $tcpdump_cv_capable_lex = insufficient ; then
+-	AC_MSG_ERROR([$LEX is insufficient to compile libpcap.
+- libpcap requires Flex 2.5.31 or later, or a compatible version of lex.])
+-fi
+-
+-#
+-# Look for yacc/bison/byacc.
+-#
+-AC_PROG_YACC
+-
+-#
+-# Make sure it supports the -p flag and supports processing our
+-# grammar.y.
+-#
+-AC_CACHE_CHECK([for capable yacc/bison], tcpdump_cv_capable_yacc,
+-	if $YACC -p pcap_ -o /dev/null $srcdir/grammar.y >/dev/null 2>&1; then
+-	    tcpdump_cv_capable_yacc=yes
+-	else
+-	    tcpdump_cv_capable_yacc=insufficient
+-	fi)
+-if test $tcpdump_cv_capable_yacc = insufficient ; then
+-	AC_MSG_ERROR([$YACC is insufficient to compile libpcap.
+- libpcap requires Bison, a newer version of Berkeley YACC with support
+- for reentrant parsers, or another YACC compatible with them.])
+-fi
+-
+-#
+ # Do various checks for various OSes and versions of those OSes.
  #
- # Assume, by default, no support for shared libraries and V7/BSD convention
- # for man pages (file formats in section 5, miscellaneous info in section 7).
-@@ -1351,13 +1333,11 @@ AC_SUBST(V_CCOPT)
+ # Assume, by default, no support for shared libraries and V7/BSD
+@@ -2050,14 +2006,12 @@ AC_SUBST(V_PROG_LDFLAGS_FAT)
  AC_SUBST(V_DEFS)
  AC_SUBST(V_FINDALLDEVS)
  AC_SUBST(V_INCLS)
 -AC_SUBST(V_LEX)
  AC_SUBST(V_PCAP)
+ AC_SUBST(V_SHLIB_CCOPT)
  AC_SUBST(V_SHLIB_CMD)
  AC_SUBST(V_SHLIB_OPT)
  AC_SUBST(V_SONAME_OPT)
@@ -121,6 +135,3 @@ index be4b29e..ec87283 100644
  AC_SUBST(ADDLOBJS)
  AC_SUBST(ADDLARCHIVEOBJS)
  AC_SUBST(SSRC)
--- 
-1.9.1
-

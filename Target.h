@@ -6,7 +6,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -136,7 +136,7 @@
 
 #include "nbase.h"
 
-#include "libnetutil/netutil.h"
+#include "libnetutil/netutil.h" /* devtype */
 
 #ifndef NOLUA
 #include "nse_main.h"
@@ -151,6 +151,7 @@ class FingerPrintResults;
 
 #include <list>
 #include <string>
+#include <time.h> /* time_t */
 
 #ifndef INET6_ADDRSTRLEN
 #define INET6_ADDRSTRLEN 46
@@ -320,7 +321,7 @@ class Target {
   PortList ports;
 
   int weird_responses; /* echo responses from other addresses, Ie a network broadcast address */
-  unsigned int flags; /* HOST_UNKNOWN, HOST_UP, or HOST_DOWN. */
+  int flags; /* HOST_UNKNOWN, HOST_UP, or HOST_DOWN. */
   struct timeout_info to;
   char *hostname; // Null if unable to resolve or unset
   char * targetname; // The name of the target host given on the command line if it is a named host

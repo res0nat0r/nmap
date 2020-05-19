@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -216,12 +216,6 @@ struct FingerPrintDB {
 };
 
 /**********************  PROTOTYPES  ***********************************/
-
-/* The OS database consists of many small strings, many of which appear
-   thousands of times. It pays to allocate memory only once for each unique
-   string, and have all references point at the one allocated value. */
-const char *string_pool_insert(const char *s);
-const char *string_pool_sprintf(const char *fmt, ...);
 
 const char *fp2ascii(FingerPrint *FP);
 

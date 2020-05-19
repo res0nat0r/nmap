@@ -6,7 +6,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -136,101 +136,15 @@
 #include "charpool.h"
 #include "FingerPrintResults.h"
 #include "nmap_error.h"
+#include "string_pool.h"
 
 #include <errno.h>
-#include <stdarg.h>
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
+#include <time.h>
 
 #include <algorithm>
 #include <list>
-#include <set>
 
 extern NmapOps o;
-
-/* Store a string uniquely. The first time this function is called with a
-   certain string, it allocates memory and stores a copy of the string in a
-   static pool. Thereafter it will return a pointer to the saved string instead
-   of allocating memory for an identical one. */
-const char *string_pool_insert(const char *s)
-{
-  static std::set<std::string> pool;
-  static std::pair<std::set<std::string>::iterator, bool> pair;
-
-  pair = pool.insert(s);
-
-  return pair.first->c_str();
-}
-
-const char *string_pool_substr(const char *s, const char *t)
-{
-  return string_pool_insert(std::string(s, t).c_str());
-}
-
-const char *string_pool_substr_strip(const char *s, const char *t) {
-  while (isspace((int) (unsigned char) *s))
-    s++;
-  while (t > s && isspace((int) (unsigned char) *(t - 1)))
-    t--;
-
-  return string_pool_substr(s, t);
-}
-
-/* Skip over whitespace to find the beginning of a word, then read until the
-   next whilespace character. Returns NULL if only whitespace is found. */
-static const char *string_pool_strip_word(const char *s) {
-  const char *t;
-
-  while (isspace((int) (unsigned char) *s))
-    s++;
-  t = s;
-  while (*t != '\0' && !isspace((int) (unsigned char) *t))
-    t++;
-
-  if (s == t)
-    return NULL;
-
-  return string_pool_substr(s, t);
-}
-
-/* Format a string with sprintf and insert it with string_pool_insert. */
-const char *string_pool_sprintf(const char *fmt, ...)
-{
-  const char *s;
-  char *buf;
-  int size, n;
-  va_list ap;
-
-  buf = NULL;
-  size = 32;
-  /* Loop until we allocate a string big enough for the sprintf. */
-  for (;;) {
-    buf = (char *) realloc(buf, size);
-    assert(buf != NULL);
-    va_start(ap, fmt);
-    n = Vsnprintf(buf, size, fmt, ap);
-    va_end(ap);
-    if (n < 0)
-      size = size * 2;
-    else if (n >= size)
-      size = n + 1;
-    else
-      break;
-  }
-
-  s = string_pool_insert(buf);
-  free(buf);
-
-  return s;
-}
 
 FingerPrintDB::FingerPrintDB() : MatchPoints(NULL) {
 }
@@ -683,12 +597,15 @@ void WriteSInfo(char *ostr, int ostrlen, bool isGoodFP,
                                 enum dist_calc_method distance_calculation_method,
                                 const u8 *mac, int openTcpPort,
                                 int closedTcpPort, int closedUdpPort) {
-  struct tm *ltime;
+  struct tm ltime;
+  int err;
   time_t timep;
   char dsbuf[10], otbuf[8], ctbuf[8], cubuf[8], dcbuf[8];
   char macbuf[16];
   timep = time(NULL);
-  ltime = localtime(&timep);
+  err = n_localtime(&timep, &ltime);
+  if (err)
+    error("Error in localtime: %s", strerror(err));
 
   otbuf[0] = '\0';
   if (openTcpPort != -1)
@@ -713,7 +630,7 @@ void WriteSInfo(char *ostr, int ostrlen, bool isGoodFP,
     Snprintf(macbuf, sizeof(macbuf), "%%M=%02X%02X%02X", mac[0], mac[1], mac[2]);
 
   Snprintf(ostr, ostrlen, "SCAN(V=%s%%E=%s%%D=%d/%d%%OT=%s%%CT=%s%%CU=%s%%PV=%c%s%s%%G=%c%s%%TM=%X%%P=%s)",
-                   NMAP_VERSION, engine_id, ltime->tm_mon + 1, ltime->tm_mday,
+                   NMAP_VERSION, engine_id, err ? 0 : ltime.tm_mon + 1, err ? 0 : ltime.tm_mday,
                    otbuf, ctbuf, cubuf, isipprivate(addr) ? 'Y' : 'N', dsbuf, dcbuf, isGoodFP ? 'Y' : 'N',
                    macbuf, (int) timep, NMAP_PLATFORM);
 }

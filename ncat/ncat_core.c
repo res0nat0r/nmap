@@ -2,7 +2,7 @@
  * ncat_core.c -- Contains option definitions and miscellaneous functions. *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -206,6 +206,8 @@ void options_init(void)
     o.execmode = EXEC_PLAIN;
     o.proxy_auth = NULL;
     o.proxytype = NULL;
+    o.proxyaddr = NULL;
+    o.proxydns = PROXYDNS_REMOTE;
     o.zerobyte = 0;
 
 #ifdef HAVE_OPENSSL
@@ -288,6 +290,32 @@ int resolve(const char *hostname, unsigned short port,
 
     flags = 0;
     if (o.nodns)
+        flags |= AI_NUMERICHOST;
+
+    result = resolve_internal(hostname, port, &sl, af, flags, 0);
+    *ss = sl.addr.storage;
+    *sslen = sl.addrlen;
+    return result;
+}
+
+/* Resolves the given hostname or IP address with getaddrinfo, and stores the
+   first result (if any) in *ss and *sslen. The value of port will be set in the
+   appropriate place in *ss; set to 0 if you don't care. af may be AF_UNSPEC, in
+   which case getaddrinfo may return e.g. both IPv4 and IPv6 results; which one
+   is first depends on the system configuration. Returns 0 on success, or a
+   getaddrinfo return code (suitable for passing to gai_strerror) on failure.
+   *ss and *sslen are always defined when this function returns 0.
+
+   Resolve the hostname with DNS only if global o.proxydns includes PROXYDNS_LOCAL. */
+int proxyresolve(const char *hostname, unsigned short port,
+    struct sockaddr_storage *ss, size_t *sslen, int af)
+{
+    int flags;
+    struct sockaddr_list sl;
+    int result;
+
+    flags = 0;
+    if (!(o.proxydns & PROXYDNS_LOCAL))
         flags |= AI_NUMERICHOST;
 
     result = resolve_internal(hostname, port, &sl, af, flags, 0);
@@ -553,66 +581,16 @@ void ncat_log_recv(const char *data, size_t len)
 /* Convert session data to a neat hexdump logfile */
 static int ncat_hexdump(int logfd, const char *data, int len)
 {
-    const char *p = data;
-    char c;
-    int i;
-    char bytestr[4] = { 0 };
-    char addrstr[10] = { 0 };
-    char hexstr[16 * 3 + 5] = { 0 };
-    char charstr[16 * 1 + 5] = { 0 };
-    char outstr[80] = { 0 };
-
-    /* FIXME: needs to be audited closer */
-    for (i = 1; i <= len; i++) {
-        if (i % 16 == 1) {
-            /* Hex address output */
-            Snprintf(addrstr, sizeof(addrstr), "%.4x", (u_int) (p - data));
-        }
-
-        c = *p;
-
-        /* If the character isn't printable. Control characters, etc. */
-        if (isprint((int) (unsigned char) c) == 0)
-            c = '.';
-
-        /* hex for output */
-        Snprintf(bytestr, sizeof(bytestr), "%02X ", (unsigned char) *p);
-        strncat(hexstr, bytestr, sizeof(hexstr) - strlen(hexstr) - 1);
-
-        /* char for output */
-        Snprintf(bytestr, sizeof(bytestr), "%c", c);
-        strncat(charstr, bytestr, sizeof(charstr) - strlen(charstr) - 1);
-
-        if (i % 16 == 0) {
-            /* neatly formatted output */
-            Snprintf(outstr, sizeof(outstr), "[%4.4s]   %-50.50s  %s\n",
-                     addrstr, hexstr, charstr);
-
-            Write(logfd, outstr, strlen(outstr));
-            zmem(outstr, sizeof(outstr));
-
-            hexstr[0] = 0;
-            charstr[0] = 0;
-        } else if (i % 8 == 0) {
-            /* cat whitespaces where necessary */
-            strncat(hexstr, "  ", sizeof(hexstr) - strlen(hexstr) - 1);
-            strncat(charstr, " ", sizeof(charstr) - strlen(charstr) - 1);
-        }
-
-        /* get the next byte */
-        p++;
-    }
-
-    /* if there's still data left in the buffer, print it */
-    if (strlen(hexstr) > 0) {
-        Snprintf(outstr, sizeof(outstr), "[%4.4s]   %-50.50s  %s\n",
-                    addrstr, hexstr, charstr);
-
-        Write(logfd, outstr, strlen(outstr));
-        zmem(outstr, sizeof(outstr));
-    }
-
-    return 1;
+  char *str = NULL;
+  str = hexdump((u8 *) data, len);
+  if (str) {
+    Write(logfd, str, strlen(str));
+    free(str);
+  }
+  else {
+    return 0;
+  }
+  return 1;
 }
 
 /* this function will return in what format the target
@@ -658,6 +636,17 @@ void setup_environment(struct fdinfo *info)
         setenv_portable("NCAT_REMOTE_PORT", "");
     } else
 #endif
+#ifdef HAVE_LINUX_VM_SOCKETS_H
+    if (su.sockaddr.sa_family == AF_VSOCK) {
+        char char_u32[11];
+
+        snprintf(char_u32, sizeof(char_u32), "%u", su.vm.svm_cid);
+        setenv_portable("NCAT_REMOTE_ADDR", char_u32);
+
+        snprintf(char_u32, sizeof(char_u32), "%u", su.vm.svm_port);
+        setenv_portable("NCAT_REMOTE_PORT", char_u32);
+    } else
+#endif
     if (getnameinfo((struct sockaddr *)&su, alen, ip, sizeof(ip),
             port, sizeof(port), NI_NUMERICHOST | NI_NUMERICSERV) == 0) {
         setenv_portable("NCAT_REMOTE_ADDR", ip);
@@ -674,6 +663,17 @@ void setup_environment(struct fdinfo *info)
         /* say localhost to keep it backwards compatible, else su.un.sun_path */
         setenv_portable("NCAT_LOCAL_ADDR", "localhost");
         setenv_portable("NCAT_LOCAL_PORT", "");
+    } else
+#endif
+#ifdef HAVE_LINUX_VM_SOCKETS_H
+    if (su.sockaddr.sa_family == AF_VSOCK) {
+        char char_u32[11];
+
+        snprintf(char_u32, sizeof(char_u32), "%u", su.vm.svm_cid);
+        setenv_portable("NCAT_LOCAL_ADDR", char_u32);
+
+        snprintf(char_u32, sizeof(char_u32), "%u", su.vm.svm_port);
+        setenv_portable("NCAT_LOCAL_PORT", char_u32);
     } else
 #endif
     if (getnameinfo((struct sockaddr *)&su, alen, ip, sizeof(ip),

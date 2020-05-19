@@ -712,7 +712,7 @@ Engine = {
           response = Error:new("Connect error: " .. response)
           response:setRetry(true)
         end
-        if response:isReduce() then
+        if response and response:isReduce() then
           local ret_creds = {}
           ret_creds.connect_phase = true
           return false, response, ret_creds
@@ -770,7 +770,7 @@ Engine = {
         driver:disconnect()
         driver = nil
 
-        if not status and response:isReduce() then
+        if not status and response and response:isReduce() then
           local ret_creds = {}
           ret_creds.username = username
           ret_creds.password = password
@@ -1094,7 +1094,7 @@ Engine = {
 
       -- should we stop
       if thread_count <= 0 then
-        if self.initial_accounts_exhausted and #self.retry_accounts == 0 or self.terminate_all then
+        if (self.initial_accounts_exhausted and #self.retry_accounts == 0) or self.terminate_all then
           break
         else
           -- there are some accounts yet to be checked, so revive the engine

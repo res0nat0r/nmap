@@ -7,7 +7,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -343,7 +343,7 @@ int UDPHeader::setTotalLength(){
   * only carry 65,507 or 65,527. However, we are not taking that into account
   * here because UDP is supposed to be independent of IPv4, IPv6 or
   * whatever other network layer protocol is used to carry the UDP datagrams.*/
-  if ((mylen+otherslen) > 65535 || (mylen+otherslen)<8 ){
+  if (otherslen < 0 || otherslen > 65535 || (mylen+otherslen) > 65535){
     printf("UDPHeader::setTotalLength(): Invalid length.\n");
     return OP_FAILURE;
   }

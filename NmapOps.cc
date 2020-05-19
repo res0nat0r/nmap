@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -129,14 +129,14 @@
  ***************************************************************************/
 
 /* $Id$ */
+#ifdef WIN32
+#include "winfix.h"
+#endif
 #include "nmap.h"
 #include "nbase.h"
 #include "NmapOps.h"
 #include "osscan.h"
 #include "nmap_error.h"
-#ifdef WIN32
-#include "winfix.h"
-#endif
 
 NmapOps o;
 
@@ -415,7 +415,7 @@ bool NmapOps::UDPScan() {
 bool NmapOps::RawScan() {
   if (ackscan||finscan||idlescan||ipprotscan||maimonscan||nullscan||osscan||synscan||udpscan||windowscan||xmasscan||sctpinitscan||sctpcookieechoscan||traceroute)
     return true;
-  if (pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS|PINGTYPE_TCP_USE_ACK|PINGTYPE_UDP|PINGTYPE_SCTP_INIT))
+  if (pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS|PINGTYPE_TCP_USE_ACK|PINGTYPE_UDP|PINGTYPE_PROTO|PINGTYPE_SCTP_INIT))
     return true;
   /* A SYN scan will only generate raw packets if nmap is running as root.
      Otherwise, it becomes a connect scan. */

@@ -4,7 +4,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -440,7 +440,7 @@ void PortList::setServiceProbeResults(u16 portno, int protocol,
 
 
 #ifndef NOLUA
-void PortList::addScriptResult(u16 portno, int protocol, ScriptResult& sr) {
+void PortList::addScriptResult(u16 portno, int protocol, const ScriptResult& sr) {
   Port *port;
 
   port = createPort(portno, protocol);
@@ -853,9 +853,9 @@ bool PortList::isIgnoredState(int state) {
   /* We will show more ports when verbosity is requested */
   if (o.verbose || o.debugging) {
     if (o.ipprotscan)
-      max_per_state *= (o.verbose + 3 * o.debugging);
+      max_per_state *= ((o.verbose + 1) + 3 * o.debugging);
     else
-      max_per_state *= (o.verbose + 20 * o.debugging);
+      max_per_state *= ((o.verbose + 1) + 20 * o.debugging);
   }
 
   if (getStateCounts(state) > max_per_state)

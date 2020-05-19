@@ -3,7 +3,7 @@
  * scan types                                                              *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -128,6 +128,14 @@
 
 #ifndef SCAN_LISTS_H
 #define SCAN_LISTS_H
+
+/* just flags to indicate whether a particular port number should get tcp
+ * scanned, udp scanned, or both
+ */
+#define SCAN_TCP_PORT	(1 << 0)
+#define SCAN_UDP_PORT	(1 << 1)
+#define SCAN_SCTP_PORT	(1 << 2)
+#define SCAN_PROTOCOLS	(1 << 3)
 
 /* The various kinds of port/protocol scans we can have
  * Each element is to point to an array of port/protocol numbers

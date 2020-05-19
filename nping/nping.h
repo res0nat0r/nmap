@@ -4,7 +4,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -187,10 +187,6 @@
     #include <sys/wait.h>
 #endif /* !WIN32 */
 
-#ifdef HAVE_SYS_PARAM_H
-    #include <sys/param.h> /* Defines MAXHOSTNAMELEN on BSD*/
-#endif
-
 #if HAVE_SYS_SOCKET_H
     #include <sys/socket.h>
 #endif
@@ -228,10 +224,6 @@
 
 /* Keep assert() defined for security reasons */
 #undef NDEBUG
-
-#ifndef MAXHOSTNAMELEN
-#define MAXHOSTNAMELEN 128
-#endif
 
 #define MAXLINE 255
 
@@ -342,7 +334,7 @@
 /* General tunable defines  **************************************************/
 #define NPING_NAME "Nping"
 #define NPING_URL "https://nmap.org/nping"
-#define NPING_VERSION "0.7.70SVN"
+#define NPING_VERSION "0.7.80SVN"
 
 
 #define DEFAULT_VERBOSITY VB_0

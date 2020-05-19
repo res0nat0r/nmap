@@ -96,7 +96,7 @@ local function absolute_path(base_path, relative_path)
   for s in fixdots(path):gmatch("[^/]*") do
     if s == "." then -- ignore
     elseif s == ".." then -- remove the previous segment
-      if #segs > 1 or #segs == 1 and segs[#segs] ~= "" then
+      if #segs > 1 or (#segs == 1 and segs[#segs] ~= "") then
         table.remove(segs)
       end
     else -- add a regular segment, possibly empty
@@ -115,9 +115,10 @@ end
 -- @return Escaped representation of string.
 -----------------------------------------------------------------------------
 function escape(s)
-  return string.gsub(s, "([^A-Za-z0-9_.~-])", function(c)
+  local ret = string.gsub(s, "([^A-Za-z0-9_.~-])", function(c)
     return string.format("%%%02x", string.byte(c))
   end)
+  return ret
 end
 
 
@@ -127,9 +128,10 @@ end
 -- @return Decoded string.
 -----------------------------------------------------------------------------
 function unescape(s)
-  return string.gsub(s, "%%(%x%x)", function(hex)
+  local ret = string.gsub(s, "%%(%x%x)", function(hex)
     return string.char(base.tonumber(hex, 16))
   end)
+  return ret
 end
 
 
@@ -220,8 +222,10 @@ function parse(url, default)
   authority = string.gsub(authority, ":(%d+)$",
                 function(p) parsed.port = tonumber(p); return "" end)
   if authority ~= "" then parsed.host = authority end
-  -- TODO: Allow other Unicode encodings
-  parsed.ascii_host = idna.toASCII(unicode.decode(parsed.host, unicode.utf8_dec))
+  if parsed.host then
+    -- TODO: Allow other Unicode encodings
+    parsed.ascii_host = idna.toASCII(unicode.decode(parsed.host, unicode.utf8_dec))
+  end
   local userinfo = parsed.userinfo
   if not userinfo then return parsed end
   userinfo = string.gsub(userinfo, ":([^:]*)$",

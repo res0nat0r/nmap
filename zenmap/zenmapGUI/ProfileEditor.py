@@ -3,7 +3,7 @@
 
 # ***********************IMPORTANT NMAP LICENSE TERMS************************
 # *                                                                         *
-# * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+# * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
 # * Project"). Nmap is also a registered trademark of the Nmap Project.     *
 # * This program is free software; you may redistribute and/or modify it    *
 # * under the terms of the GNU General Public License as published by the   *
@@ -137,11 +137,11 @@ from zenmapGUI.higwidgets.higtextviewers import HIGTextView
 from zenmapGUI.higwidgets.higbuttons import HIGButton
 from zenmapGUI.higwidgets.higtables import HIGTable
 from zenmapGUI.higwidgets.higdialogs import HIGAlertDialog, HIGDialog
-from zenmapGUI.OptionBuilder import *
+from zenmapGUI.OptionBuilder import OptionBuilder
 from zenmapCore.Paths import Path
-from zenmapCore.UmitConf import Profile, CommandProfile
+from zenmapCore.UmitConf import CommandProfile
 from zenmapCore.UmitLogging import log
-import zenmapCore.I18N
+import zenmapCore.I18N  # lgtm[py/unused-import]
 from zenmapCore.NmapOptions import NmapOptions
 
 

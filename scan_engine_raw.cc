@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -146,6 +146,36 @@
 #endif
 
 extern NmapOps o;
+
+u16 UltraProbe::sport() const {
+  switch (mypspec.proto) {
+    case IPPROTO_TCP:
+      return probes.IP.pd.tcp.sport;
+    case IPPROTO_UDP:
+      return probes.IP.pd.udp.sport;
+    case IPPROTO_SCTP:
+      return probes.IP.pd.sctp.sport;
+    default:
+      return 0;
+  }
+  /* not reached */
+}
+
+u16 UltraProbe::dport() const {
+  switch (mypspec.proto) {
+    case IPPROTO_TCP:
+      return mypspec.pd.tcp.dport;
+    case IPPROTO_UDP:
+      return mypspec.pd.udp.dport;
+    case IPPROTO_SCTP:
+      return mypspec.pd.sctp.dport;
+    default:
+      /* dport() can get called for other protos if we
+       * get ICMP responses during IP proto scans. */
+      return 0;
+  }
+  /* not reached */
+}
 
 /* Pass an arp packet, including ethernet header. Must be 42bytes */
 
@@ -1541,7 +1571,7 @@ bool get_arp_result(UltraScanInfo *USI, struct timeval *stime) {
   int rc;
   u8 rcvdmac[6];
   struct in_addr rcvdIP;
-  struct timeval rcvdtime;
+  struct timeval rcvdtime, fudgedsenttime;
   bool timedout = false;
   struct sockaddr_in sin;
   HostScanStats *hss = NULL;
@@ -1594,7 +1624,14 @@ bool get_arp_result(UltraScanInfo *USI, struct timeval *stime) {
         continue;
       }
       probeI = hss->probes_outstanding.end();
-      probeI--;
+      do {
+        /* Delay in libpcap could mean we sent another probe *after* this
+         * response was received. Search back for the last probe before rcvdtime. */
+        probeI--;
+        /* If the response came just a hair (<25ms) after the probe was sent, it's
+         * probably a response to an earlier probe instead. Keep looking. */
+        TIMEVAL_MSEC_ADD(fudgedsenttime, (*probeI)->sent, INITIAL_ARP_RTT_TIMEOUT / 8);
+      } while (TIMEVAL_AFTER(fudgedsenttime, rcvdtime) && probeI != hss->probes_outstanding.begin());
       ultrascan_host_probe_update(USI, hss, probeI, HOST_UP, &rcvdtime);
       /* Now that we know the host is up, we can forget our other probes. */
       hss->destroyAllOutstandingProbes();
@@ -1612,7 +1649,7 @@ bool get_ns_result(UltraScanInfo *USI, struct timeval *stime) {
   int rc;
   u8 rcvdmac[6];
   struct sockaddr_in6 rcvdIP;
-  struct timeval rcvdtime;
+  struct timeval rcvdtime, fudgedsenttime;
   bool timedout = false;
   bool has_mac = false;
   struct sockaddr_in6 sin6;
@@ -1626,7 +1663,7 @@ bool get_ns_result(UltraScanInfo *USI, struct timeval *stime) {
     to_usec = TIMEVAL_SUBTRACT(*stime, USI->now);
     if (to_usec < 2000)
       to_usec = 2000;
-    rc = read_na_pcap(USI->pd, rcvdmac, &rcvdIP, to_usec, &rcvdtime, &has_mac);
+    rc = read_ns_reply_pcap(USI->pd, rcvdmac, &rcvdIP, to_usec, &rcvdtime, &has_mac, PacketTrace::traceND);
     gettimeofday(&USI->now, NULL);
     if (rc == -1)
       fatal("Received -1 response from read_arp_reply_pcap");
@@ -1662,11 +1699,20 @@ bool get_ns_result(UltraScanInfo *USI, struct timeval *stime) {
       hss->target->reason.reason_id = ER_NDRESPONSE;
 
       if (hss->probes_outstanding.empty()) {
+        /* It's up because we got a response, but doesn't count as a response
+         * within this timeout window. Go around again. */
+        hss->target->flags = HOST_UP;
         continue;
-        /* TODO: I suppose I should really mark the @@# host as up */
       }
       probeI = hss->probes_outstanding.end();
-      probeI--;
+      do {
+        /* Delay in libpcap could mean we sent another probe *after* this
+         * response was received. Search back for the last probe before rcvdtime. */
+        probeI--;
+        /* If the response came just a hair (<25ms) after the probe was sent, it's
+         * probably a response to an earlier probe instead. Keep looking. */
+        TIMEVAL_MSEC_ADD(fudgedsenttime, (*probeI)->sent, INITIAL_ARP_RTT_TIMEOUT / 8);
+      } while (TIMEVAL_AFTER(fudgedsenttime, rcvdtime) && probeI != hss->probes_outstanding.begin());
       ultrascan_host_probe_update(USI, hss, probeI, HOST_UP, &rcvdtime);
       /* Now that we know the host is up, we can forget our other probes. */
       hss->destroyAllOutstandingProbes();

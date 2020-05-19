@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -137,8 +137,6 @@
 #include "NpingTarget.h"
 #include <vector>
 
-using namespace std;
-
 #define MAX_NPING_HOSTNAME_LEN 512    /**< Max length for named hosts */
 
 class NpingTargets {
@@ -176,7 +174,7 @@ class NpingTargets {
 
     /* TODO: Make private */
     NpingTarget *currenths;
-    vector<NpingTarget *> Targets;
+    std::vector<NpingTarget *> Targets;
 
 }; /* End of class NpingTargets */
 

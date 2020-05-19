@@ -3,7 +3,7 @@
 
 # ***********************IMPORTANT NMAP LICENSE TERMS************************
 # *                                                                         *
-# * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+# * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
 # * Project"). Nmap is also a registered trademark of the Nmap Project.     *
 # * This program is free software; you may redistribute and/or modify it    *
 # * under the terms of the GNU General Public License as published by the   *
@@ -485,13 +485,10 @@ for dir in dirs:
         if INSTALLED_FILES_NAME == self.record:
             distutils.log.warn("warning: installation record is overwriting "
                 "--record file '%s'." % self.record)
-        f = open(INSTALLED_FILES_NAME, "w")
-        try:
+        with open(INSTALLED_FILES_NAME, "w") as f:
             for output in self.get_installed_files():
                 assert "\n" not in output
                 print >> f, output
-        finally:
-            f.close()
 
 
 class my_uninstall(Command):

@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -128,6 +128,10 @@
  *                                                                         *
  ***************************************************************************/
 
+#ifdef WIN32
+#include "winfix.h"
+#endif
+
 #include "nping.h"
 #include "nbase.h"
 #include "NpingOps.h"
@@ -137,9 +141,6 @@
 #include "output.h"
 #include "common.h"
 
-#ifdef WIN32
-#include "winfix.h"
-#endif
 
 /******************************************************************************
  *  Constructors and destructors                                              *
@@ -394,6 +395,8 @@ NpingOps::~NpingOps() {
     free(ip_options);
  if ( target_ports!=NULL )
     free(target_ports);
+ if (delayed_rcvd_str_set)
+   free(delayed_rcvd_str);
  return;
 } /* End of ~NpingOps() */
 
@@ -3115,7 +3118,15 @@ int NpingOps::echoPayload(bool value){
 int NpingOps::getTotalProbes(){
   int total_ports=0;
   this->getTargetPorts(&total_ports);
-  return this->getPacketCount() * total_ports * this->targets.Targets.size();
+  u64 tmp = (u64) this->getPacketCount() * total_ports;
+  if (tmp > INT_MAX) {
+    return -1;
+  }
+  tmp *= this->targets.Targets.size();
+  if (tmp > INT_MAX) {
+    return -1;
+  }
+  return (int) tmp;
 }
 
 

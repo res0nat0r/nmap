@@ -6,7 +6,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -131,16 +131,15 @@
 
 /* $Id: */
 
-#include <winclude.h>
-#include <sys/timeb.h>
-#include <shellapi.h>
-
-
+#include <nmap_winconfig.h>
 #include "..\nmap.h"
 #include "..\tcpip.h"
 #include "winfix.h"
 #include "..\NmapOps.h"
 #include "..\nmap_error.h"
+#include <Packet32.h>
+
+#include <shellapi.h>
 
 #ifdef _MSC_VER
 # include <delayimp.h>

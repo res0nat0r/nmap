@@ -9,7 +9,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -166,7 +166,6 @@
 #include "nmap.h"
 #include "scan_lists.h"
 #include "NmapOps.h"
-#include "services.h"
 #include "Target.h"
 #include "nmap_error.h"
 #include "output.h"
@@ -632,13 +631,13 @@ static void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
     } else if (ports->ack_ping_count > 0) {
       proxy->probe_port = ports->ack_ping_ports[0];
     } else {
-      u16 *ports;
+      u16 *tmp_ports;
       int count;
 
-      getpts_simple(DEFAULT_TCP_PROBE_PORT_SPEC, SCAN_TCP_PORT, &ports, &count);
+      getpts_simple(DEFAULT_TCP_PROBE_PORT_SPEC, SCAN_TCP_PORT, &tmp_ports, &count);
       assert(count > 0);
-      proxy->probe_port = ports[0];
-      free(ports);
+      proxy->probe_port = tmp_ports[0];
+      free(tmp_ports);
     }
   }
 

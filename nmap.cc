@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2018 Insecure.Com LLC ("The Nmap  *
+ * The Nmap Security Scanner is (C) 1996-2019 Insecure.Com LLC ("The Nmap  *
  * Project"). Nmap is also a registered trademark of the Nmap Project.     *
  * This program is free software; you may redistribute and/or modify it    *
  * under the terms of the GNU General Public License as published by the   *
@@ -130,6 +130,13 @@
 
 /* $Id$ */
 
+#ifdef WIN32
+#include "winfix.h"
+/* This name collides in the following include. */
+#undef PS_NONE
+#include <shlobj.h>
+#endif
+
 #include "nmap.h"
 #include "osscan.h"
 #include "scan_engine.h"
@@ -166,13 +173,6 @@
 #include <pwd.h>
 #endif
 
-#ifdef WIN32
-#include "winfix.h"
-/* This name collides in the following include. */
-#undef PS_NONE
-#include <shlobj.h>
-#endif
-
 #ifndef IPPROTO_SCTP
 #include "libnetutil/netutil.h"
 #endif
@@ -196,6 +196,11 @@
 #include "libdnet-stripped/include/config.h"
 #endif
 #define DNET_VERSION VERSION
+
+#ifdef LINUX
+/* Check for Windows Subsystem for Linux (WSL) */
+#include <sys/utsname.h>
+#endif
 
 #include <string>
 #include <sstream>
@@ -433,59 +438,59 @@ static unsigned short *merge_port_lists(unsigned short *port_list1, int count1,
   return merged_port_list;
 }
 
-void validate_scan_lists(scan_lists &ports, NmapOps &o) {
-  if (o.pingtype == PINGTYPE_UNKNOWN) {
-    if (o.isr00t) {
-      if (o.pf() == PF_INET) {
-        o.pingtype = DEFAULT_IPV4_PING_TYPES;
+void validate_scan_lists(scan_lists &vports, NmapOps &vo) {
+  if (vo.pingtype == PINGTYPE_UNKNOWN) {
+    if (vo.isr00t) {
+      if (vo.pf() == PF_INET) {
+        vo.pingtype = DEFAULT_IPV4_PING_TYPES;
       } else {
-        o.pingtype = DEFAULT_IPV6_PING_TYPES;
+        vo.pingtype = DEFAULT_IPV6_PING_TYPES;
       }
       getpts_simple(DEFAULT_PING_ACK_PORT_SPEC, SCAN_TCP_PORT,
-                    &ports.ack_ping_ports, &ports.ack_ping_count);
+                    &vports.ack_ping_ports, &vports.ack_ping_count);
       getpts_simple(DEFAULT_PING_SYN_PORT_SPEC, SCAN_TCP_PORT,
-                    &ports.syn_ping_ports, &ports.syn_ping_count);
+                    &vports.syn_ping_ports, &vports.syn_ping_count);
     } else {
-      o.pingtype = PINGTYPE_TCP; // if nonr00t
+      vo.pingtype = PINGTYPE_TCP; // if nonr00t
       getpts_simple(DEFAULT_PING_CONNECT_PORT_SPEC, SCAN_TCP_PORT,
-                    &ports.syn_ping_ports, &ports.syn_ping_count);
+                    &vports.syn_ping_ports, &vports.syn_ping_count);
     }
   }
 
-  if ((o.pingtype & PINGTYPE_TCP) && (!o.isr00t)) {
+  if ((vo.pingtype & PINGTYPE_TCP) && (!vo.isr00t)) {
     // We will have to do a connect() style ping
     // Pretend we wanted SYN probes all along.
-    if (ports.ack_ping_count > 0) {
+    if (vports.ack_ping_count > 0) {
       // Combine the ACK and SYN ping port lists since they both reduce to
       // SYN probes in this case
       unsigned short *merged_port_list;
       int merged_port_count;
 
       merged_port_list = merge_port_lists(
-                           ports.syn_ping_ports, ports.syn_ping_count,
-                           ports.ack_ping_ports, ports.ack_ping_count,
+                           vports.syn_ping_ports, vports.syn_ping_count,
+                           vports.ack_ping_ports, vports.ack_ping_count,
                            &merged_port_count);
 
       // clean up a bit
-      free(ports.syn_ping_ports);
-      free(ports.ack_ping_ports);
+      free(vports.syn_ping_ports);
+      free(vports.ack_ping_ports);
 
-      ports.syn_ping_count = merged_port_count;
-      ports.syn_ping_ports = merged_port_list;
-      ports.ack_ping_count = 0;
-      ports.ack_ping_ports = NULL;
+      vports.syn_ping_count = merged_port_count;
+      vports.syn_ping_ports = merged_port_list;
+      vports.ack_ping_count = 0;
+      vports.ack_ping_ports = NULL;
     }
-    o.pingtype &= ~PINGTYPE_TCP_USE_ACK;
-    o.pingtype |= PINGTYPE_TCP_USE_SYN;
+    vo.pingtype &= ~PINGTYPE_TCP_USE_ACK;
+    vo.pingtype |= PINGTYPE_TCP_USE_SYN;
   }
 
-  if (!o.isr00t) {
-    if (o.pingtype & (PINGTYPE_ICMP_PING | PINGTYPE_ICMP_MASK | PINGTYPE_ICMP_TS)) {
+  if (!vo.isr00t) {
+    if (vo.pingtype & (PINGTYPE_ICMP_PING | PINGTYPE_ICMP_MASK | PINGTYPE_ICMP_TS)) {
       error("Warning:  You are not root -- using TCP pingscan rather than ICMP");
-      o.pingtype = PINGTYPE_TCP;
-      if (ports.syn_ping_count == 0) {
-        getpts_simple(DEFAULT_TCP_PROBE_PORT_SPEC, SCAN_TCP_PORT, &ports.syn_ping_ports, &ports.syn_ping_count);
-        assert(ports.syn_ping_count > 0);
+      vo.pingtype = PINGTYPE_TCP;
+      if (vports.syn_ping_count == 0) {
+        getpts_simple(DEFAULT_TCP_PROBE_PORT_SPEC, SCAN_TCP_PORT, &vports.syn_ping_ports, &vports.syn_ping_count);
+        assert(vports.syn_ping_count > 0);
       }
     }
   }
@@ -551,7 +556,7 @@ public:
 
 } delayed_options;
 
-struct tm *local_time;
+struct tm local_time;
 
 static void test_file_name(const char *filename, const char *option) {
   if (filename[0] == '-' && filename[1] != '\0') {
@@ -917,29 +922,29 @@ void parse_options(int argc, char **argv) {
           o.setXSLStyleSheet("https://svn.nmap.org/nmap/docs/nmap.xsl");
         } else if (strcmp(long_options[option_index].name, "oN") == 0) {
           test_file_name(optarg, long_options[option_index].name);
-          delayed_options.normalfilename = logfilename(optarg, local_time);
+          delayed_options.normalfilename = logfilename(optarg, &local_time);
         } else if (strcmp(long_options[option_index].name, "oG") == 0
                    || strcmp(long_options[option_index].name, "oM") == 0) {
           test_file_name(optarg, long_options[option_index].name);
-          delayed_options.machinefilename = logfilename(optarg, local_time);
+          delayed_options.machinefilename = logfilename(optarg, &local_time);
           if (long_options[option_index].name[1] == 'M')
             delayed_options.warn_deprecated("oM", "oG");
         } else if (strcmp(long_options[option_index].name, "oS") == 0) {
           test_file_name(optarg, long_options[option_index].name);
-          delayed_options.kiddiefilename = logfilename(optarg, local_time);
+          delayed_options.kiddiefilename = logfilename(optarg, &local_time);
         } else if (strcmp(long_options[option_index].name, "oH") == 0) {
           fatal("HTML output is not directly supported, though Nmap includes an XSL for transforming XML output into HTML.  See the man page.");
         } else if (strcmp(long_options[option_index].name, "oX") == 0) {
           test_file_name(optarg, long_options[option_index].name);
-          delayed_options.xmlfilename = logfilename(optarg, local_time);
+          delayed_options.xmlfilename = logfilename(optarg, &local_time);
         } else if (strcmp(long_options[option_index].name, "oA") == 0) {
           char buf[MAXPATHLEN];
           test_file_name(optarg, long_options[option_index].name);
-          Snprintf(buf, sizeof(buf), "%s.nmap", logfilename(optarg, local_time));
+          Snprintf(buf, sizeof(buf), "%s.nmap", logfilename(optarg, &local_time));
           delayed_options.normalfilename = strdup(buf);
-          Snprintf(buf, sizeof(buf), "%s.gnmap", logfilename(optarg, local_time));
+          Snprintf(buf, sizeof(buf), "%s.gnmap", logfilename(optarg, &local_time));
           delayed_options.machinefilename = strdup(buf);
-          Snprintf(buf, sizeof(buf), "%s.xml", logfilename(optarg, local_time));
+          Snprintf(buf, sizeof(buf), "%s.xml", logfilename(optarg, &local_time));
           delayed_options.xmlfilename = strdup(buf);
         } else if (strcmp(long_options[option_index].name, "thc") == 0) {
           log_write(LOG_STDOUT, "!!Greets to Van Hauser, Plasmoid, Skyper and the rest of THC!!\n");
@@ -1140,7 +1145,7 @@ void parse_options(int argc, char **argv) {
     case 'm':
       delayed_options.warn_deprecated("m", "oG");
       test_file_name(optarg, "oG");
-      delayed_options.machinefilename = logfilename(optarg, local_time);
+      delayed_options.machinefilename = logfilename(optarg, &local_time);
       break;
     case 'n':
       o.noresolve = true;
@@ -1156,7 +1161,7 @@ void parse_options(int argc, char **argv) {
     case 'o':
       delayed_options.warn_deprecated("o", "oN");
       test_file_name(optarg, "o");
-      delayed_options.normalfilename = logfilename(optarg, local_time);
+      delayed_options.normalfilename = logfilename(optarg, &local_time);
       break;
     case 'P':
       if (!optarg) {
@@ -1380,6 +1385,7 @@ void parse_options(int argc, char **argv) {
         o.max_parallelism = 1;
         o.scan_delay = 400;
       } else if (*optarg == '3' || (strcasecmp(optarg, "Normal") == 0)) {
+        // Default timing, see NmapOps.cc
       } else if (*optarg == '4' || (strcasecmp(optarg, "Aggressive") == 0)) {
         o.timing_level = 4;
         o.setMinRttTimeout(100);
@@ -1554,14 +1560,14 @@ void  apply_delayed_options() {
     o.reason = true;
 
   // ISO 8601 date/time -- http://www.cl.cam.ac.uk/~mgk25/iso-time.html
-  if (strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M %Z", local_time) <= 0)
+  if (strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M %Z", &local_time) <= 0)
     fatal("Unable to properly format time");
   log_write(LOG_STDOUT | LOG_SKID, "Starting %s %s ( %s ) at %s\n", NMAP_NAME, NMAP_VERSION, NMAP_URL, tbuf);
   if (o.verbose) {
-    if (local_time->tm_mon == 8 && local_time->tm_mday == 1) {
-      unsigned int a = (local_time->tm_year - 97)%100;
-      log_write(LOG_STDOUT | LOG_SKID, "Happy %d%s Birthday to Nmap, may it live to be %d!\n", local_time->tm_year - 97,(a>=11&&a<=13?"th":(a%10==1?"st":(a%10==2?"nd":(a%10==3?"rd":"th")))), local_time->tm_year + 3);
-    } else if (local_time->tm_mon == 11 && local_time->tm_mday == 25) {
+    if (local_time.tm_mon == 8 && local_time.tm_mday == 1) {
+      unsigned int a = (local_time.tm_year - 97)%100;
+      log_write(LOG_STDOUT | LOG_SKID, "Happy %d%s Birthday to Nmap, may it live to be %d!\n", local_time.tm_year - 97,(a>=11&&a<=13?"th":(a%10==1?"st":(a%10==2?"nd":(a%10==3?"rd":"th")))), local_time.tm_year + 3);
+    } else if (local_time.tm_mon == 11 && local_time.tm_mday == 25) {
       log_write(LOG_STDOUT | LOG_SKID, "Nmap wishes you a merry Christmas! Specify -sX for Xmas Scan (https://nmap.org/book/man-port-scanning-techniques.html).\n");
     }
   }
@@ -1814,14 +1820,26 @@ int nmap_main(int argc, char *argv[]) {
   char hostname[FQDN_LEN + 1] = "";
   struct sockaddr_storage ss;
   size_t sslen;
+  int err;
 
+#ifdef LINUX
+  /* Check for WSL and warn that things may not go well. */
+  struct utsname uts;
+  if (!uname(&uts)) {
+    if (strstr(uts.release, "Microsoft") != NULL) {
+      error("Warning: %s may not work correctly on Windows Subsystem for Linux.\n"
+          "For best performance and accuracy, use the native Windows build from %s/download.html#windows.",
+          NMAP_NAME, NMAP_URL);
+    }
+  }
+#endif
+
+  tzset();
   now = time(NULL);
-  local_time = localtime(&now);
-
-  if (o.debugging)
-    nbase_set_log(fatal, error);
-  else
-    nbase_set_log(fatal, NULL);
+  err = n_localtime(&now, &local_time);
+  if (err) {
+    fatal("n_localtime failed: %s", strerror(err));
+  }
 
   if (argc < 2){
     printusage();
@@ -1834,6 +1852,12 @@ int nmap_main(int argc, char *argv[]) {
 #endif
 
   parse_options(argc, argv);
+
+  if (o.debugging)
+    nbase_set_log(fatal, error);
+  else
+    nbase_set_log(fatal, NULL);
+
 
   tty_init(); // Put the keyboard in raw mode
 
@@ -1896,7 +1920,10 @@ int nmap_main(int argc, char *argv[]) {
   fflush(stderr);
 
   timep = time(NULL);
-  Strncpy(mytime, ctime(&timep), sizeof(mytime));
+  err = n_ctime(mytime, sizeof(mytime), &timep);
+  if (err) {
+    fatal("n_ctime failed: %s", strerror(err));
+  }
   chomp(mytime);
 
   if (!o.resuming) {
@@ -2318,14 +2345,14 @@ int nmap_main(int argc, char *argv[]) {
 
 int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv) {
   char *filestr;
-  int filelen;
-  char nmap_arg_buffer[1024];
+  s64 filelen;
+  char nmap_arg_buffer[4096]; /* roughly aligned with arg_parse limit */
   struct in_addr lastip;
   char *p, *q, *found, *lastipstr; /* I love C! */
   /* We mmap it read/write since we will change the last char to a newline if it is not already */
   filestr = mmapfile(fname, &filelen, O_RDWR);
   if (!filestr) {
-    fatal("Could not mmap() %s file. Make sure you have enough rights and the file really exists.", fname);
+    pfatal("Could not mmap() %s file", fname);
   }
 
   if (filelen < 20) {
@@ -2469,7 +2496,7 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv) {
   /* Ensure the log file ends with a newline */
   filestr[filelen - 1] = '\n';
   if (munmap(filestr, filelen) != 0)
-    gh_perror("%s: error in munmap(%p, %u)", __func__, filestr, filelen);
+    gh_perror("%s: error in munmap(%p, %ld)", __func__, filestr, filelen);
 
   return 0;
 }
@@ -2753,20 +2780,24 @@ static void display_nmap_version() {
   with.push_back(std::string("libpcre-") + get_word_or_quote(pcre_version(), 0));
 #endif
 
-  const char *pcap_version = pcap_lib_version();
 #ifdef WIN32
-  const char *pcap_num = strpbrk(pcap_version, "0123456789");
-  if (pcap_num == NULL)
-    pcap_num = "(unknown)";
-  std::string pcap_num_str (pcap_num, strcspn(pcap_num, ","));
+  if (o.have_pcap) {
+    const char *pcap_version = pcap_lib_version();
+    const char *pcap_num = strpbrk(pcap_version, "0123456789");
+    if (pcap_num == NULL)
+      pcap_num = "(unknown)";
+    std::string pcap_num_str (pcap_num, strcspn(pcap_num, ","));
+    with.push_back(get_word_or_quote(pcap_version, 0) + std::string("-") + pcap_num_str);
+  }
 #else
+  const char *pcap_version = pcap_lib_version();
   std::string pcap_num_str = get_word_or_quote(pcap_version, 2);
-#endif
   with.push_back(
 #ifdef PCAP_INCLUDED
       std::string("nmap-") +
 #endif
       get_word_or_quote(pcap_version, 0) + std::string("-") + pcap_num_str);
+#endif
 
 #ifdef DNET_INCLUDED
   with.push_back(std::string("nmap-libdnet-") + DNET_VERSION);
