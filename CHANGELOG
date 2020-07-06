@@ -1,5 +1,9 @@
 #Nmap Changelog ($Id$); -*-text-*-
 
+o [GH#1622][GH#2068] Fix reverse-DNS handling of PTR records that are not lowercase.
+  Nmap was failing to identify reverse-DNS names when the DNS server delivered
+  them like ".IN-ADDR.ARPA". [Lucas Nussbaum, Richard Schütz, Daniel Miller]
+
 o [NSE][GH#1999][GH#2005] IKE library was not properly populating the protocol
   number in aggressive mode requests. [luc-x41]
 
@@ -48,6 +52,24 @@ o [Windows] Add support for the new loopback behavior in Npcap 0.9983. This
   enables Nmap to scan localhost on Windows without needing the Npcap Loopback
   Adapter to be installed, which was a source of problems for some users.
   [Daniel Miller]
+
+o [NSE][GH#2063] IPP request object conversion to string was not working
+  correctly [nnposter]
+
+o [NSE][GH#2063] IPP response parser was not correctly processing
+  end-of-attributes-tag [nnposter]
+
+o [NSE] Script cups-info was failing due to erroneous double-decoding
+  of the IPP printer status [nnposter]
+
+o [NSE][GH#2010] Oracle TNS parser was incorrectly unmarshalling DALC byte
+  arrays [nnposter]
+
+o [NSE] The password hashing function for Oracle 10g was not working correctly
+  for non-alphanumeric characters [nnposter]
+
+o [NSE] Virtual host probing list, vhosts-full.lst, was missing numerous
+  entries present in vhosts-default.lst [nnposter]
 
 o [NSE][GH#1931][GH#1932] Script http-grep was not correctly calculating Luhn
   checksum [Colleen Li, nnposter]
@@ -170,6 +192,10 @@ o [GH#1396] Fixed the Windows installer, which would replace the entire PATH
   system variable with the path for Nmap if it exceeded 1024 bytes. This was
   fixed by using the "large strings" build of NSIS to build the new installer.
   [Daniel Miller]
+
+o Replaced the addrset matching code that is used by --exclude and
+  --excludefile with a much faster implementation using a radix tree (trie).
+  https://seclists.org/nmap-dev/2018/q4/13
 
 o [GH#1291][GH#34][GH#1339] Use pcap_create instead of pcap_live_open in
   Nmap, and set immediate mode on the pcap descriptor. This solves packet
